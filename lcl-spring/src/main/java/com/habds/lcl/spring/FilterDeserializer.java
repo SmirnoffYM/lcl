@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Deserializer decides what filter should be chosen by specified {@link this#TYPE_PROPERTY} value
+ * Deserializer decides what filter should be chosen by specified {@link FilterDeserializer#TYPE_PROPERTY} value
  *
  * @author Yurii Smyrnov
  * @version 1

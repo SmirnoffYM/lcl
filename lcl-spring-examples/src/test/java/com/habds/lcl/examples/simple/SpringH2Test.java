@@ -40,7 +40,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 /**
- * Test sorting&filtering using H2 database
+ * Test sorting&amp;filtering using H2 database
  *
  * @author Yurii Smyrnov
  * @version 1

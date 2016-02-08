@@ -8,7 +8,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Chain of {@link PostMapping}s. Allows to start postmapping recursively (for collections&arrays support etc)
+ * Chain of {@link PostMapping}s. Allows to start postmapping recursively (for collections&amp;arrays support etc)
  *
  * @author Yurii Smyrnov
  * @version 1

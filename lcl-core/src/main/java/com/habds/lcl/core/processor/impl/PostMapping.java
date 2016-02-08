@@ -7,7 +7,7 @@ import java.lang.reflect.Field;
 
 /**
  * Transformation that can applied to value extracted from Entity's field just before setting it into DTO's field.
- * Applicability is determined by {@link this#isApplicable(Class, Class, Field, Processor)} method.
+ * Applicability is determined by {@link PostMapping#isApplicable(Class, Class, Field, Processor)} method.
  * {@code dtoField} in both cases can be nullable.
  *
  * @author Yurii Smyrnov

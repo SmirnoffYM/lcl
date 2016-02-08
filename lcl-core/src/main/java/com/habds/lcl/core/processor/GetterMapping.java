@@ -1,7 +1,7 @@
 package com.habds.lcl.core.processor;
 
 /**
- * Property getter mapping function, can be chained using {@link this#andThen(GetterMapping)} method.
+ * Property getter mapping function, can be chained using {@link GetterMapping#andThen(GetterMapping)} method.
  * Used for retrieval (an with possible additional transformation) of source property value from source entity, that
  * later will be set into target property of target entity.
  *
