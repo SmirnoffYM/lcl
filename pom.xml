@@ -7,7 +7,7 @@
 
     <groupId>com.habds</groupId>
     <artifactId>lcl-parent</artifactId>
-    <version>0.9.0</version>
+    <version>0.9.1-SNAPSHOT</version>
 
     <name>lcl-parent</name>
     <description>lcl parent project</description>
