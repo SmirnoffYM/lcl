@@ -7,7 +7,7 @@
 
     <groupId>com.habds</groupId>
     <artifactId>lcl-parent</artifactId>
-    <version>0.9.0-SNAPSHOT</version>
+    <version>0.9.0</version>
 
     <name>lcl-parent</name>
     <description>lcl parent project</description>
@@ -28,6 +28,13 @@
         <module>lcl-spring-examples</module>
         <module>lcl-spring</module>
     </modules>
+
+    <developers>
+        <developer>
+            <name>Yurii Smyrnov</name>
+            <email>y.m.smirnoff@gmail.com</email>
+        </developer>
+    </developers>
 
     <distributionManagement>
         <snapshotRepository>
