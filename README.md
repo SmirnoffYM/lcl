@@ -1,4 +1,4 @@
-# lcl
+# lcl [![Build Status](https://travis-ci.org/SmirnoffYM/lcl.svg?branch=master)](https://travis-ci.org/SmirnoffYM/lcl)
 
 LCL (stands for *Lightweight Class Linking*) is a small library that aims to simplify data interchange between 
 Domain Objects (Business Objects, Entities) and Data Transfer Objects (DTOs, Command objects) in 
