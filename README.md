@@ -115,7 +115,18 @@ setting up all 9 properties like this: ``clientDto.setLogin(client.getLoginData(
 # Filtering and sorting with lcl-spring
 
 Now let's see an example how to deal with it using *lcl-spring*. 
-Equip your ``ClientDto`` with ``@ClassLink`` and ``@Link`` annotations.
+First of all, add ``lcl-spring`` into you project. For example, here's Maven dependency:
+
+```xml
+
+    <dependency>
+        <groupId>com.habds</groupId>
+        <artifactId>lcl-core</artifactId>
+        <version>0.9.0</version>
+    </dependency>
+```
+
+Now, equip your ``ClientDto`` with ``@ClassLink`` and ``@Link`` annotations.
 
 [ClientDto](https://github.com/SmirnoffYM/lcl/blob/master/lcl-spring-examples/src/main/java/com/habds/lcl/examples/dto/ClientDto.java):
 
