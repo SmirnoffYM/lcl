@@ -8,11 +8,11 @@
     <parent>
         <groupId>com.habds</groupId>
         <artifactId>lcl-parent</artifactId>
-        <version>0.9.1-SNAPSHOT</version>
+        <version>0.9.1.RELEASE</version>
     </parent>
 
     <artifactId>lcl-spring</artifactId>
-    <version>0.9.1-SNAPSHOT</version>
+    <version>0.9.1.RELEASE</version>
     <packaging>jar</packaging>
 
     <name>lcl-spring</name>
@@ -45,7 +45,7 @@
         <dependency>
             <groupId>com.habds</groupId>
             <artifactId>lcl-core</artifactId>
-            <version>0.9.1-SNAPSHOT</version>
+            <version>0.9.1.RELEASE</version>
         </dependency>
 
         <dependency>
