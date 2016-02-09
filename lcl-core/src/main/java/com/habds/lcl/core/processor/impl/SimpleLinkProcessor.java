@@ -2,6 +2,7 @@ package com.habds.lcl.core.processor.impl;
 
 import com.habds.lcl.core.processor.GetterMapping;
 import com.habds.lcl.core.processor.LinkProcessor;
+import com.habds.lcl.core.processor.Processor;
 import com.habds.lcl.core.processor.SetterMapping;
 import com.habds.lcl.core.processor.impl.ext.ArrayPostMapping;
 import com.habds.lcl.core.processor.impl.ext.CollectionPostMapping;
@@ -14,6 +15,8 @@ import javax.persistence.criteria.*;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Bindable;
 import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Default {@link LinkProcessor} implementation. Uses dot as property separator.
@@ -23,9 +26,10 @@ import java.lang.reflect.Field;
  * @since 12/1/2015 1:07 AM
  */
 @SuppressWarnings("unchecked")
-public class SimpleLinkProcessor implements LinkProcessor<SimpleProcessor> {
+public class SimpleLinkProcessor implements LinkProcessor<SimpleProcessor>, PostMappingChain {
 
-    private PostMappingChain getterPostMappingChain;
+    private SimpleProcessor processor;
+    private List<PostMapping> mappings;
 
     public SimpleLinkProcessor() {
     }
@@ -37,22 +41,61 @@ public class SimpleLinkProcessor implements LinkProcessor<SimpleProcessor> {
      */
     @Override
     public void configure(SimpleProcessor processor) {
-        getterPostMappingChain = new PostMappingChain(processor,
-            ArrayPostMapping.class, CollectionPostMapping.class, EnumPostMapping.class, RecursionPostMapping.class);
+        this.processor = processor;
+        this.mappings = Arrays.asList(
+            new ArrayPostMapping(), new CollectionPostMapping(), new EnumPostMapping(), new RecursionPostMapping());
+    }
+
+    @Override
+    public GetterMapping getterMapping(String path, Class entityClass, Class dtoPropertyClass, Field dtoField) {
+        // If there are no chains remained, perform one last post-mapping if available
+        if (path.isEmpty()) {
+            GetterMapping getterMapping = (s, t) -> s;
+            GetterMapping appliedPostMapping
+                = applyPostMapping(getterMapping, path, entityClass, dtoPropertyClass, dtoField);
+            return appliedPostMapping != null ? appliedPostMapping : getterMapping;
+        }
+
+        String[] splittedPath = path.split("\\.", 2);
+        String propertyName = splittedPath[0];
+        String remainingPath = splittedPath.length == 2 ? splittedPath[1] : "";
+        Property property = ClassCache.getInstance().getProperty(entityClass, propertyName);
+        Class entityPropertyClass = property.getType();
+
+        // Extract value
+        GetterMapping getterMapping = (s, t) -> s == null ? null : property.getter().apply(s);
+
+        // Perform post-extracting mapping if available
+        GetterMapping appliedPostMapping
+            = applyPostMapping(getterMapping, remainingPath, entityPropertyClass, dtoPropertyClass, dtoField);
+        if (appliedPostMapping != null) {
+            return appliedPostMapping;
+        }
+
+        // If there are more chains in the path, continue mapping
+        if (!remainingPath.isEmpty()) {
+            return getterMapping.andThen(
+                getterMapping(remainingPath, entityPropertyClass, dtoPropertyClass, dtoField));
+        }
+
+        // Otherwise return extracted value
+        return getterMapping;
+    }
+
+    private GetterMapping applyPostMapping(GetterMapping getterMapping, String remainingPath, Class entityPropertyClass,
+                                           Class dtoPropertyClass, Field dtoField) {
+        for (PostMapping mapping : mappings) {
+            if (mapping.isApplicable(remainingPath, entityPropertyClass, dtoPropertyClass, dtoField, this)) {
+                return getterMapping.andThen(
+                    mapping.getMapping(remainingPath, entityPropertyClass, dtoPropertyClass, dtoField, this));
+            }
+        }
+        return null;
     }
 
     @Override
     public GetterMapping getterMapping(String path, Class entityClass, Field dtoField) {
-        String propertyName = path.split("\\.", 2)[0];
-        Property property = ClassCache.getInstance().getProperty(entityClass, propertyName);
-
-        GetterMapping mapper = (s, t) -> s == null ? null : property.getter().apply(s);
-        if (path.contains(".")) {
-            String remainingPath = path.substring(path.indexOf(".") + 1);
-            return mapper.andThen(getterMapping(remainingPath, property.getType(), dtoField));
-        } else {
-            return mapper.andThen(getPropertyPostMapping(property.getType(), dtoField));
-        }
+        return getterMapping(path, entityClass, dtoField.getType(), dtoField);
     }
 
     @Override
@@ -60,13 +103,18 @@ public class SimpleLinkProcessor implements LinkProcessor<SimpleProcessor> {
         String propertyName = path.split("\\.", 2)[0];
         Property property = ClassCache.getInstance().getProperty(entityClass, propertyName);
 
-        //TODO: post mapping
+        //TODO: mapping
         if (path.contains(".")) {
             String remainingPath = path.substring(path.indexOf(".") + 1);
             return (s, v) -> passSetterChain(s, property, property.getter().apply(s), remainingPath, dtoField, v);
         } else {
             return (s, v) -> property.setter().apply(s, v);
         }
+    }
+
+    @Override
+    public Processor getProcessor() {
+        return processor;
     }
 
     /**
@@ -93,10 +141,6 @@ public class SimpleLinkProcessor implements LinkProcessor<SimpleProcessor> {
         }
         return setterMapping(remainingPath, intermediateProperty.getType(), dtoField)
             .map(intermediatePropertyValue, dtoPropertyValue);
-    }
-
-    public GetterMapping getPropertyPostMapping(Class entityPropertyClass, Field dtoField) {
-        return getterPostMappingChain.start(entityPropertyClass, dtoField.getType(), dtoField);
     }
 
     @Override

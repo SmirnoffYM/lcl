@@ -19,12 +19,12 @@ public class Property<T, P> {
     private Function<T, P> getter;
     private BiFunction<T, P, P> setter;
 
-    public Property(Class<T> clazz, Field field) {
+    public Property(Class<T> clazz, String name) {
+        this.name = name;
+        field = ClassCache.getInstance().getAllFields(clazz).get(name);
         if (field == null) {
-            throw new IllegalArgumentException("Invalid field for class " + clazz);
+            throw new IllegalArgumentException("Invalid field for class=" + clazz.getSimpleName() + ", name=" + name);
         }
-        name = field.getName();
-        this.field = field;
 
         getter = o -> {
             try {

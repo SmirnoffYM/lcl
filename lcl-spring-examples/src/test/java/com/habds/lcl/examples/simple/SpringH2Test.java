@@ -8,6 +8,7 @@ import com.habds.lcl.core.data.filter.impl.In;
 import com.habds.lcl.core.data.filter.impl.Like;
 import com.habds.lcl.core.data.filter.impl.Range;
 import com.habds.lcl.examples.config.AppConfig;
+import com.habds.lcl.examples.dto.AccountDto;
 import com.habds.lcl.examples.dto.ClientDto;
 import com.habds.lcl.examples.dto.NewClientDto;
 import com.habds.lcl.examples.dto.UpdateClientDto;
@@ -29,15 +30,11 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.habds.lcl.examples.persistence.bo.Gender.F;
 import static com.habds.lcl.examples.persistence.bo.Gender.M;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 /**
  * Test sorting&amp;filtering using H2 database
@@ -110,6 +107,24 @@ public class SpringH2Test {
             .findOne((root, query, cb) -> cb.equal(root.get("loginData").get("email"), CLIENT_EMAIL));
         ClientDto clientDto = processor.process(client, ClientDto.class);
         assertEquals(BIRTHDAY, clientDto.getBirthday());
+        assertEquals("Yurii", clientDto.getName());
+        assertEquals("John", clientDto.getLeadName());
+        assertEquals(CLIENT_EMAIL, clientDto.getLogin());
+        assertEquals(M, clientDto.getGender());
+        assertEquals(null, clientDto.getManagerName());
+        assertEquals(1_000, clientDto.getSelectedAccount().getAmount().intValueExact());
+        assertEquals("UAH", clientDto.getSelectedAccount().getCurrency());
+        assertEquals(AccountType.CHECKING.name(), clientDto.getSelectedAccount().getType());
+        assertEquals(client.getUid(), clientDto.getUid());
+
+        assertTrue(clientDto.getAccounts().stream().allMatch(a -> a.getClass() == AccountDto.class));
+
+        List<AccountDto> accounts = new ArrayList<>(clientDto.getAccounts());
+        assertEquals(clientDto.getSelectedAccount().getNumber(), accounts.get(0).getNumber());
+        assertEquals(AccountType.SAVINGS.name(), accounts.get(1).getType());
+
+        assertArrayEquals(new AccountType[]{AccountType.CHECKING, AccountType.SAVINGS},
+            clientDto.getOwnedAccountTypes().toArray(new AccountType[clientDto.getOwnedAccountTypes().size()]));
 
         System.out.println("Init test OK");
     }

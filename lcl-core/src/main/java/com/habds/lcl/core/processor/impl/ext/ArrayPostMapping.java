@@ -1,7 +1,6 @@
 package com.habds.lcl.core.processor.impl.ext;
 
 import com.habds.lcl.core.processor.GetterMapping;
-import com.habds.lcl.core.processor.Processor;
 import com.habds.lcl.core.processor.impl.PostMapping;
 import com.habds.lcl.core.processor.impl.PostMappingChain;
 
@@ -18,20 +17,21 @@ import java.lang.reflect.Field;
 public class ArrayPostMapping implements PostMapping {
 
     @Override
-    public boolean isApplicable(Class entityPropertyClass, Class dtoPropertyClass, Field dtoField,
-                                Processor processor) {
-        return dtoPropertyClass.isArray();
+    public boolean isApplicable(String remainingPath, Class entityPropertyClass, Class dtoPropertyClass,
+                                Field dtoField, PostMappingChain chain) {
+        return entityPropertyClass.isArray() && dtoPropertyClass.isArray();
     }
 
     @Override
-    public GetterMapping getMapping(Class entityPropertyClass, Class dtoPropertyClass, Field dtoField,
+    public GetterMapping getMapping(String remainingPath,
+                                    Class entityPropertyClass, Class dtoPropertyClass, Field dtoField,
                                     PostMappingChain chain) {
         return (entityProperty, dto) -> {
             Object[] value = (Object[]) entityProperty;
             Object[] targetProperty = (Object[]) Array.newInstance(dtoPropertyClass, value.length);
             for (int i = 0; i < value.length; i++) {
                 targetProperty[i] = chain
-                    .start(value[i].getClass(), dtoPropertyClass.getComponentType(), null)
+                    .getterMapping(remainingPath, value[i].getClass(), dtoPropertyClass.getComponentType(), null)
                     .map(value[i], dto);
             }
             return targetProperty;

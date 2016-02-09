@@ -47,7 +47,7 @@ public class ClassCache {
             // initialize map for each class if it is absent
             .computeIfAbsent(clazz, c -> new HashMap<>())
             // create a Property object if it is absent
-            .computeIfAbsent(propertyName, p -> new Property<>(clazz, getAllFields(clazz).get(p)));
+            .computeIfAbsent(propertyName, p -> new Property<>(clazz, p));
     }
 
     public <S> boolean hasProperty(Class<S> clazz, String propertyName) {

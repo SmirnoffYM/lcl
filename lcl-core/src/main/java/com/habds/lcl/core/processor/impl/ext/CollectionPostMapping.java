@@ -2,7 +2,6 @@ package com.habds.lcl.core.processor.impl.ext;
 
 import com.habds.lcl.core.annotation.Contains;
 import com.habds.lcl.core.processor.GetterMapping;
-import com.habds.lcl.core.processor.Processor;
 import com.habds.lcl.core.processor.impl.PostMapping;
 import com.habds.lcl.core.processor.impl.PostMappingChain;
 import com.habds.lcl.core.processor.impl.util.ClassCache;
@@ -23,13 +22,15 @@ import java.util.stream.Stream;
 public class CollectionPostMapping implements PostMapping {
 
     @Override
-    public boolean isApplicable(Class entityPropertyClass, Class dtoPropertyClass, Field dtoField,
-                                Processor processor) {
-        return dtoField != null && Collection.class.isAssignableFrom(dtoPropertyClass);
+    public boolean isApplicable(String remainingPath, Class entityPropertyClass, Class dtoPropertyClass, Field dtoField,
+                                PostMappingChain chain) {
+        return Collection.class.isAssignableFrom(entityPropertyClass)
+            && dtoField != null && Collection.class.isAssignableFrom(dtoPropertyClass);
     }
 
     @Override
-    public GetterMapping getMapping(Class entityPropertyClass, Class dtoPropertyClass, Field dtoField,
+    public GetterMapping getMapping(String remainingPath, Class entityPropertyClass,
+                                    Class dtoPropertyClass, Field dtoField,
                                     PostMappingChain chain) {
         Class<?> dtoCollectionType = getDtoEmptyCollectionType(dtoField.getType());
         Contains annotation = dtoField.getAnnotation(Contains.class);
@@ -41,7 +42,8 @@ public class CollectionPostMapping implements PostMapping {
                     collection = (Collection) ClassCache.construct(dtoCollectionType);
                 }
                 for (Object element : (Collection) entityProperty) {
-                    collection.add(chain.start(element.getClass(), dtoElementType, null).map(element, dto));
+                    collection.add(
+                        chain.getterMapping(remainingPath, element.getClass(), dtoElementType, null).map(element, dto));
                 }
                 return collection;
         };

@@ -3,11 +3,13 @@ package com.habds.lcl.examples.dto;
 import com.habds.lcl.core.annotation.ClassLink;
 import com.habds.lcl.core.annotation.Contains;
 import com.habds.lcl.core.annotation.Link;
+import com.habds.lcl.examples.persistence.bo.AccountType;
 import com.habds.lcl.examples.persistence.bo.Client;
 import com.habds.lcl.examples.persistence.bo.Gender;
 
 import java.util.Date;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 @ClassLink(Client.class)
@@ -27,6 +29,10 @@ public class ClientDto {
     private AccountDto selectedAccount;
     @Contains(AccountDto.class)
     private Set<AccountDto> accounts = new LinkedHashSet<>();
+
+    @Contains(AccountType.class)
+    @Link("accounts.type")
+    private List<AccountType> ownedAccountTypes;
 
     @Link("lead.personalData.name")
     private String leadName;
@@ -103,5 +109,13 @@ public class ClientDto {
 
     public void setGender(Gender gender) {
         this.gender = gender;
+    }
+
+    public List<AccountType> getOwnedAccountTypes() {
+        return ownedAccountTypes;
+    }
+
+    public void setOwnedAccountTypes(List<AccountType> ownedAccountTypes) {
+        this.ownedAccountTypes = ownedAccountTypes;
     }
 }

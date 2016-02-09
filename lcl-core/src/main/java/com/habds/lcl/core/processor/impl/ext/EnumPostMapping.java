@@ -1,7 +1,6 @@
 package com.habds.lcl.core.processor.impl.ext;
 
 import com.habds.lcl.core.processor.GetterMapping;
-import com.habds.lcl.core.processor.Processor;
 import com.habds.lcl.core.processor.impl.PostMapping;
 import com.habds.lcl.core.processor.impl.PostMappingChain;
 
@@ -28,13 +27,17 @@ import java.lang.reflect.Field;
 public class EnumPostMapping implements PostMapping {
 
     @Override
-    public boolean isApplicable(Class entityPropertyClass, Class dtoPropertyClass, Field dtoField,
-                                Processor processor) {
-        return entityPropertyClass.isEnum() || dtoPropertyClass.isEnum();
+    public boolean isApplicable(String remainingPath, Class entityPropertyClass, Class dtoPropertyClass, Field dtoField,
+                                PostMappingChain chain) {
+        return convertible(entityPropertyClass, dtoPropertyClass) || convertible(dtoPropertyClass, entityPropertyClass);
+    }
+
+    private boolean convertible(Class from, Class to) {
+        return from.isEnum() && (to.isEnum() || to == String.class || Number.class.isAssignableFrom(to));
     }
 
     @Override
-    public GetterMapping getMapping(Class entityPropertyClass, Class dtoPropertyClass,
+    public GetterMapping getMapping(String remainingPath, Class entityPropertyClass, Class dtoPropertyClass,
                                     Field dtoField, PostMappingChain chain) {
         if (dtoPropertyClass.equals(entityPropertyClass)) {
             return (property, dto) -> property;
