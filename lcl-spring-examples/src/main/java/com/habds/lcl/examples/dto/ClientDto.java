@@ -30,7 +30,6 @@ public class ClientDto {
     @Contains(AccountDto.class)
     private Set<AccountDto> accounts = new LinkedHashSet<>();
 
-    @Contains(AccountType.class)
     @Link("accounts.type")
     private List<AccountType> ownedAccountTypes;
 
