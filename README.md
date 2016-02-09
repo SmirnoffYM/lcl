@@ -122,7 +122,7 @@ First of all, add ``lcl-spring`` into you project. For example, here's Maven dep
     <dependency>
         <groupId>com.habds</groupId>
         <artifactId>lcl-spring</artifactId>
-        <version>0.9.0</version>
+        <version>0.9.1.RELEASE</version>
     </dependency>
 ```
 
