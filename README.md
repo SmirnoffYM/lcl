@@ -5,9 +5,10 @@ Domain Objects (Business Objects, Entities) and Data Transfer Objects (DTOs, Com
 Java enterprise projects.
 
 It's very common that you have ``User`` class with lots of relations: embedded personal data, references to
-log entities (changes of that data), owned banking accounts, other users etc. So when sending that all data to frontend
-(especially to general availability pages) you need to manually convert each ``User`` into ``UserDto`` object 
-containing only fields that would be displayed on UI. 
+log entities (changes of that data), owned banking accounts, other users etc. So when sending all that data to frontend
+(especially to public pages) you need to convert each ``User`` into ``UserDto`` object 
+containing only fields that would be displayed on UI. Usually you just write up to 20 lines of something like
+``dto.setName(user.getPersonalData().getName());`` to fill your DTO with data.
 
 Also typically you need to provide possibility to filter, sort and paginate these DTOs. 
 So to solve this you write your own JPA Specification (using Spring Data JPA) or 
@@ -110,12 +111,12 @@ Using Spring you probably write your own filter object (something like
 that holds all filtered fields and Predicate builder function, 
 set up ``Sort`` object, then call ``clientDAO.findAll(specification, pageable)`` and 
 manually map the resulting Page<Client> into Page<ClientDto> 
-setting up all 9 properties like this: ``clientDto.setLogin(client.getLoginData().getEmail())``. Too complex as for me.
+setting up all 9 properties like this: ``dto.setLogin(client.getLoginData().getEmail())``. Too complex as for me.
 
 # Filtering and sorting with lcl-spring
 
 Now let's see an example how to deal with it using *lcl-spring*. 
-First of all, add ``lcl-spring`` into you project. For example, here's Maven dependency:
+First of all, add ``lcl-spring`` into your project. Here's Maven dependency:
 
 ```xml
 
@@ -159,7 +160,7 @@ Now, equip your ``ClientDto`` with ``@ClassLink`` and ``@Link`` annotations.
     }
 ```
 
-Here ``@Link("loginData.email") private String login;`` means that DTO's ``login`` property will be taken from 
+Here ``@Link("loginData.email") private String login;`` means that DTO's ``login`` property value will be taken from 
 ``email`` field of ``LoginData`` embeddable object belonging to ``User`` (superclass of ``Client``).
 
 Next, set up Jackson to allow deserialization of incoming filters and register ``SpringProcessor`` bean to deal 
@@ -411,6 +412,7 @@ property of ``@Entity``-marked ``Account``, thus decides to fetch an existing re
 
 ```
 
-Here you can pass ``predefined`` properties calling ``dao.updateAndSave(client, dto, predefined)`` 
-or perform update-without-saving calling ``dao.update(client, dto)`` or ``dao.update(client, dto, predefined)`` methods, 
+You also can pass ``predefined`` properties calling ``dao.updateAndSave(client, dto, predefined)`` 
+or perform update-without-saving by 
+calling ``dao.update(client, dto)`` or ``dao.update(client, dto, predefined)`` methods, 
 just like with ``create`` case.
