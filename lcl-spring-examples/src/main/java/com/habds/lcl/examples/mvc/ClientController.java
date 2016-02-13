@@ -37,8 +37,6 @@ public class ClientController {
     @Autowired
     private AccountDao accountDao;
 
-    //TODO: bootstrap site with sorting etc
-
     @RequestMapping(method = RequestMethod.POST)
     private Page<ClientDto> read(@RequestBody Map<String, Filter> filters, Pageable pageable) {
         return processor.dao(ClientDto.class).findAll(filters, pageable);

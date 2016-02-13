@@ -1,6 +1,7 @@
 package com.habds.lcl.core.processor.impl;
 
 import com.habds.lcl.core.annotation.ClassLink;
+import com.habds.lcl.core.annotation.Ignored;
 import com.habds.lcl.core.annotation.Link;
 import com.habds.lcl.core.processor.GetterMapping;
 import com.habds.lcl.core.processor.LinkProcessor;
@@ -51,9 +52,11 @@ public class MappingMetadata<S, T> {
      */
     public void configure() {
         ClassCache.getInstance().getAllFields(dtoClass).forEach((name, field) -> {
-            String path = toDotPath(field);
-            getterMappers.put(name, linkProcessor.getterMapping(path, entityClass, field));
-            setterMappers.put(name, linkProcessor.setterMapping(path, entityClass, field));
+            if (field.getAnnotation(Ignored.class) == null) {
+                String path = toDotPath(field);
+                getterMappers.put(name, linkProcessor.getterMapping(path, entityClass, field));
+                setterMappers.put(name, linkProcessor.setterMapping(path, entityClass, field));
+            }
         });
     }
 
