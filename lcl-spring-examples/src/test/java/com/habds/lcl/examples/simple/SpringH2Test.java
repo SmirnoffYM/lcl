@@ -50,7 +50,7 @@ import static org.junit.Assert.*;
 public class SpringH2Test {
 
     public static final String CLIENT_EMAIL = "some@email.net";
-    public static final Date BIRTHDAY = new Date();
+    public static final Date BIRTHDAY = new GregorianCalendar(1992, Calendar.AUGUST, 2).getTime();
 
     @Autowired
     private SpringProcessor processor;
@@ -107,6 +107,7 @@ public class SpringH2Test {
             .findOne((root, query, cb) -> cb.equal(root.get("loginData").get("email"), CLIENT_EMAIL));
         ClientDto clientDto = processor.process(client, ClientDto.class);
         assertEquals(BIRTHDAY, clientDto.getBirthday());
+        assertTrue(clientDto.isAdult());
         assertEquals("Yurii", clientDto.getName());
         assertEquals("John", clientDto.getLeadName());
         assertEquals(CLIENT_EMAIL, clientDto.getLogin());
@@ -151,6 +152,7 @@ public class SpringH2Test {
         filters.put("name", new Equals("Yurii"));
         filters.put("birthday", new Range<Date, Date>().fromExclusive(BIRTHDAY).toExclusive(new Date()));
         assertEquals(1, dao.count(filters));
+        assertFalse(dao.findAll(filters).get(0).isAdult());
 
         filters = new HashMap<>();
         filters.put("name", new Like("Abc"));

@@ -2,9 +2,11 @@ package com.habds.lcl.core.processor.impl.util;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -22,6 +24,8 @@ public class ClassCache {
 
     // Cached fields for all classes visited this object
     private Map<Class, Map<String, Field>> classFields = new HashMap<>();
+    // Cached getters (getXXX() or isXXX() for boolean return type) for all classes visited this object
+    private Map<Class, Map<String, Method>> classGetters = new HashMap<>();
     // Cached properties
     private Map<Class, Map<String, Property>> classProperties = new HashMap<>();
 
@@ -42,6 +46,14 @@ public class ClassCache {
         }
     }
 
+    public static Object invoke(Object o, Method method, Object... args) {
+        try {
+            return method.invoke(o, args);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public <S, P> Property<S, P> getProperty(Class<S> clazz, String propertyName) {
         return classProperties
             // initialize map for each class if it is absent
@@ -51,8 +63,12 @@ public class ClassCache {
     }
 
     public <S> boolean hasProperty(Class<S> clazz, String propertyName) {
-        Map<String, Property> properties = classProperties.get(clazz);
-        return properties != null && properties.containsKey(propertyName);
+        // Optimize this method
+        try {
+            return getProperty(clazz, propertyName) != null;
+        } catch (RuntimeException e) {
+            return false;
+        }
     }
 
     public void setPropertyValue(Object bean, String name, Object value) {
@@ -67,11 +83,31 @@ public class ClassCache {
         if (classFields.containsKey(clazz)) {
             return classFields.get(clazz);
         }
-        cacheFields(clazz);
+        cacheFieldsAndMethods(clazz);
         return classFields.get(clazz);
     }
 
-    public void cacheFields(Class clazz) {
+    public Map<String, Method> getAllGetters(Class clazz) {
+        if (classGetters.containsKey(clazz)) {
+            return classGetters.get(clazz);
+        }
+        cacheFieldsAndMethods(clazz);
+        return classGetters.get(clazz);
+    }
+
+    public boolean hasGetterMethod(Class clazz, String propertyName) {
+        return classGetters.get(clazz).containsKey(propertyName);
+    }
+
+    public Method getGetterMethod(Class clazz, String propertyName) {
+        return classGetters.get(clazz).get(propertyName);
+    }
+
+    public Map<String, Property> getAllProperties(Class clazz) {
+        return classProperties.get(clazz);
+    }
+
+    public void cacheFieldsAndMethods(Class clazz) {
         Map<String, Field> fields = Arrays.asList(clazz.getDeclaredFields()).stream()
             .peek(f -> f.setAccessible(true))
             .collect(Collectors.toMap(Field::getName, Function.identity()));
@@ -79,5 +115,24 @@ public class ClassCache {
             fields.putAll(getAllFields(clazz.getSuperclass()));
         }
         classFields.put(clazz, fields);
+
+        Map<String, Method> methods = Arrays.asList(clazz.getMethods()).stream()
+            .filter(this::isGetter)
+            .collect(Collectors.toMap(this::getPropertyNameFromGetter, Function.identity()));
+        classGetters.put(clazz, methods);
+    }
+
+    private boolean isGetter(Method method) {
+        String name = method.getName();
+        return method.getParameterCount() == 0 && method.getReturnType() != void.class
+            && method.getReturnType() != Void.class
+            && ((name.startsWith("get") && Objects.equals(name.substring(3, 4).toUpperCase(), name.substring(3, 4)))
+            || (method.getReturnType() == boolean.class || method.getReturnType() == Boolean.class)
+            && name.startsWith("is") && Objects.equals(name.substring(2, 3).toUpperCase(), name.substring(2, 3)));
+    }
+
+    private String getPropertyNameFromGetter(Method getter) {
+        String name = getter.getName().replaceFirst("get|is", "");
+        return name.substring(0, 1).toLowerCase() + name.substring(1);
     }
 }

@@ -23,6 +23,9 @@ public class ClientDto {
     @Link("personalData.birthday")
     private Date birthday;
 
+    @Link("personalData.already18")
+    private boolean adult;
+
     @Link("personalData.gender")
     private Gender gender;
 
@@ -116,5 +119,13 @@ public class ClientDto {
 
     public void setOwnedAccountTypes(List<AccountType> ownedAccountTypes) {
         this.ownedAccountTypes = ownedAccountTypes;
+    }
+
+    public boolean isAdult() {
+        return adult;
+    }
+
+    public void setAdult(boolean adult) {
+        this.adult = adult;
     }
 }

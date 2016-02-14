@@ -1,6 +1,10 @@
 package com.habds.lcl.examples.persistence.bo;
 
-import javax.persistence.*;
+import javax.persistence.Embeddable;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Date;
 
 @Embeddable
@@ -20,6 +24,11 @@ public class PersonalData {
         this.surname = surname;
         this.birthday = birthday;
         this.gender = gender;
+    }
+
+    public boolean isAlready18() {
+        return ZonedDateTime.now().minusYears(18)
+            .isAfter(ZonedDateTime.ofInstant(birthday.toInstant(), ZoneId.systemDefault()));
     }
 
     public String getName() {

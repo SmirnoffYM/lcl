@@ -15,8 +15,10 @@ import javax.persistence.criteria.*;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Bindable;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * Default {@link LinkProcessor} implementation. Uses dot as property separator.
@@ -59,11 +61,24 @@ public class SimpleLinkProcessor implements LinkProcessor<SimpleProcessor>, Post
         String[] splittedPath = path.split("\\.", 2);
         String propertyName = splittedPath[0];
         String remainingPath = splittedPath.length == 2 ? splittedPath[1] : "";
-        Property property = ClassCache.getInstance().getProperty(entityClass, propertyName);
-        Class entityPropertyClass = property.getType();
+
+        Class entityPropertyClass;
+        Function getter;
+        if (ClassCache.getInstance().hasProperty(entityClass, propertyName)) {
+            Property property = ClassCache.getInstance().getProperty(entityClass, propertyName);
+            entityPropertyClass = property.getType();
+            getter = property.getter();
+        } else if (ClassCache.getInstance().hasGetterMethod(entityClass, propertyName)) {
+            Method getterMethod = ClassCache.getInstance().getGetterMethod(entityClass, propertyName);
+            entityPropertyClass = getterMethod.getReturnType();
+            getter = (entity) -> ClassCache.invoke(entity, getterMethod);
+        } else {
+            throw new IllegalStateException("Cannot access " + propertyName + " from " + entityClass
+                + ", no such field or corresponding public getter method");
+        }
 
         // Extract value
-        GetterMapping getterMapping = (s, t) -> s == null ? null : property.getter().apply(s);
+        GetterMapping getterMapping = (s, t) -> s == null ? null : getter.apply(s);
 
         // Perform post-extracting mapping if available
         GetterMapping appliedPostMapping

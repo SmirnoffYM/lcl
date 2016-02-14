@@ -43,8 +43,8 @@ public class MappingMetadata<S, T> {
         }
         entityClass = (Class<S>) classLink.value();
 
-        ClassCache.getInstance().cacheFields(entityClass);
-        ClassCache.getInstance().cacheFields(dtoClass);
+        ClassCache.getInstance().cacheFieldsAndMethods(entityClass);
+        ClassCache.getInstance().cacheFieldsAndMethods(dtoClass);
     }
 
     /**
