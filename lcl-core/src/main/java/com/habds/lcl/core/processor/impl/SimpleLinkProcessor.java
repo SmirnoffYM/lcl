@@ -116,6 +116,10 @@ public class SimpleLinkProcessor implements LinkProcessor<SimpleProcessor>, Post
     @Override
     public SetterMapping setterMapping(String path, Class entityClass, Field dtoField) {
         String propertyName = path.split("\\.", 2)[0];
+        if (!ClassCache.getInstance().hasProperty(entityClass, propertyName) &&
+            ClassCache.getInstance().hasGetterMethod(entityClass, propertyName)) {
+            return (s, v) -> v;
+        }
         Property property = ClassCache.getInstance().getProperty(entityClass, propertyName);
 
         //TODO: mapping
