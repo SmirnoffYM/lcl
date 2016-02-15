@@ -15,12 +15,18 @@ import javax.persistence.criteria.*;
 public class Like extends Filter<String> {
 
     private String value;
+    private boolean useLowerCase = true;
 
     public Like() {
     }
 
     public Like(String value) {
         this.value = value;
+    }
+
+    public Like(String value, boolean useLowerCase) {
+        this.value = value;
+        this.useLowerCase = useLowerCase;
     }
 
     public String getValue() {
@@ -31,9 +37,19 @@ public class Like extends Filter<String> {
         this.value = value;
     }
 
+    public boolean isUseLowerCase() {
+        return useLowerCase;
+    }
+
+    public void setUseLowerCase(boolean useLowerCase) {
+        this.useLowerCase = useLowerCase;
+    }
+
     @Override
     public <R> Predicate buildPredicate(Path<String> path, Root<R> root, CriteriaQuery<?> query, CriteriaBuilder cb,
                                         Converter converter) {
-        return cb.like(cb.lower(path), "%" + value.toLowerCase() + "%");
+        return useLowerCase
+            ? cb.like(cb.lower(path), "%" + value.toLowerCase() + "%")
+            : cb.like(path, "%" + value + "%");
     }
 }

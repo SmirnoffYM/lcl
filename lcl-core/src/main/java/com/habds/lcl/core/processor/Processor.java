@@ -8,7 +8,9 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Root;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Class processes classes marked with {@link com.habds.lcl.core.annotation.ClassLink} annotation - DTOs.
@@ -54,6 +56,10 @@ public interface Processor {
      */
     <ENTITY, DTO> DTO process(ENTITY entity, Class<DTO> dtoClass);
 
+    default <ENTITY, DTO> List<DTO> process(List<ENTITY> entities, Class<DTO> dtoClass) {
+        return entities.stream().map(e -> process(e, dtoClass)).collect(Collectors.toList());
+    }
+
     /**
      * Merge data from DTO into Entity
      *
@@ -85,6 +91,23 @@ public interface Processor {
      * @return JPA specification for filtering Entities
      */
     <ENTITY, DTO> Specs<ENTITY> createSpecs(Map<String, Filter> filters, Class<DTO> dtoClass);
+
+    /**
+     * Create JPA specification for Entity using filtering DTO, that will be transformed into
+     * filters map, see first argument in {@link Processor#createSpecs(Map, Class)} method.
+     * Any DTO's field holding {@code null} value or marked with
+     * {@link com.habds.lcl.core.annotation.Ignored} annotation will not be included into map.
+     *
+     * Additionally, filtering DTO can implement {@link Specs} interface itself, then the result of this method will be
+     * composition of filters map predicate and
+     * predicate built using {@link Specs#buildPredicate(Root, CriteriaQuery, CriteriaBuilder)} method.
+     *
+     * @param dto      filtering DTO
+     * @param <ENTITY> type of Entity
+     * @param <DTO>    type of DTO
+     * @return JPA specification for filtering Entities
+     */
+    <ENTITY, DTO> Specs<ENTITY> createSpecs(DTO dto);
 
     /**
      * Get dot-path for Entity's property by specified DTO class and DTO's property name

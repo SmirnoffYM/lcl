@@ -308,7 +308,8 @@ Currently, 4 filter ``$type``s are supported: ``equals``
 (the default one, will be taken if ``$type`` isn't specified explicitly), ``in``, ``like`` and ``range``. 
 Filter options are next:
 
-- ``value`` option for ``equals`` and ``like`` filter;
+- ``value`` option for ``equals`` filter;
+- ``value`` and ``useLowerCase`` options for ``like`` filter;
 - ``values`` option for ``in`` filter (expecting array here);
 - ``from``, ``fromExclusive``, ``to`` and ``toExclusive`` options for ``range`` filter.
 

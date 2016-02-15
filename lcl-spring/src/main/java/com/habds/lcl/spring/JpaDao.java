@@ -38,17 +38,22 @@ public class JpaDao<ENTITY, DTO> {
 
     public List<DTO> findAll(Map<String, Filter> filters) {
         Specs<ENTITY> specs = processor.createSpecs(filters, dtoClass);
-        return delegate.findAll(specs::buildPredicate).stream()
-            .map(s -> processor.process(s, dtoClass))
-            .collect(toList());
+        return processor.process(delegate.findAll(specs::buildPredicate), dtoClass);
+    }
+
+    public List<ENTITY> findAll(DTO filters) {
+        Specs<ENTITY> specs = processor.createSpecs(filters);
+        return delegate.findAll(specs::buildPredicate);
     }
 
     public List<DTO> findAll(Map<String, Filter> filters, Sort sort) {
         Specs<ENTITY> specs = processor.createSpecs(filters, dtoClass);
-        return delegate
-            .findAll(specs::buildPredicate, convertToEntity(sort)).stream()
-            .map(s -> processor.process(s, dtoClass))
-            .collect(toList());
+        return processor.process(delegate.findAll(specs::buildPredicate, convertToEntity(sort)), dtoClass);
+    }
+
+    public List<ENTITY> findAll(DTO filters, Sort sort) {
+        Specs<ENTITY> specs = processor.createSpecs(filters);
+        return delegate.findAll(specs::buildPredicate, convertToEntity(sort));
     }
 
     public Page<DTO> findAll(Map<String, Filter> filters, Pageable page) {
@@ -58,6 +63,12 @@ public class JpaDao<ENTITY, DTO> {
                 new PageRequest(page.getPageNumber(), page.getPageSize(), convertToEntity(page.getSort())))
             .map(s -> processor.process(s, dtoClass));
         return overwriteSort(result, page);
+    }
+
+    public Page<ENTITY> findAll(DTO filters, Pageable page) {
+        Specs<ENTITY> specs = processor.createSpecs(filters);
+        return delegate.findAll(specs::buildPredicate,
+                new PageRequest(page.getPageNumber(), page.getPageSize(), convertToEntity(page.getSort())));
     }
 
     private Sort convertToEntity(Sort sort) {
@@ -82,12 +93,25 @@ public class JpaDao<ENTITY, DTO> {
         return processor.process(delegate.findOne(specs::buildPredicate), dtoClass);
     }
 
+    public ENTITY getOne(DTO filters) {
+        Specs<ENTITY> specs = processor.createSpecs(filters);
+        return delegate.findOne(specs::buildPredicate);
+    }
+
     public long count(Map<String, Filter> filters) {
         Specs<ENTITY> specs = processor.createSpecs(filters, dtoClass);
         return delegate.count(specs::buildPredicate);
     }
 
+    public long count(DTO filters) {
+        return delegate.count(processor.<ENTITY, DTO>createSpecs(filters)::buildPredicate);
+    }
+
     public boolean exists(Map<String, Filter> filters) {
+        return count(filters) > 0;
+    }
+
+    public boolean exists(DTO filters) {
         return count(filters) > 0;
     }
 

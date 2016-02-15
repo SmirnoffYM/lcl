@@ -1,5 +1,6 @@
 package com.habds.lcl.core.processor.impl.util;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -37,6 +38,14 @@ public class Property<T, P> {
             ClassCache.getInstance().setPropertyValue(o, name, p);
             return p;
         };
+    }
+
+    public <A extends Annotation> A getFieldAnnotation(Class<A> annotationClass) {
+        return field.getAnnotation(annotationClass);
+    }
+
+    public boolean hasFieldAnnotation(Class<? extends Annotation> annotationClass) {
+        return getFieldAnnotation(annotationClass) != null;
     }
 
     public Function<T, P> getter() {

@@ -8,10 +8,7 @@ import com.habds.lcl.core.data.filter.impl.In;
 import com.habds.lcl.core.data.filter.impl.Like;
 import com.habds.lcl.core.data.filter.impl.Range;
 import com.habds.lcl.examples.config.AppConfig;
-import com.habds.lcl.examples.dto.AccountDto;
-import com.habds.lcl.examples.dto.ClientDto;
-import com.habds.lcl.examples.dto.NewClientDto;
-import com.habds.lcl.examples.dto.UpdateClientDto;
+import com.habds.lcl.examples.dto.*;
 import com.habds.lcl.examples.persistence.bo.*;
 import com.habds.lcl.examples.persistence.dao.AccountDao;
 import com.habds.lcl.examples.persistence.dao.ClientDao;
@@ -128,6 +125,93 @@ public class SpringH2Test {
             clientDto.getOwnedAccountTypes().toArray(new AccountType[clientDto.getOwnedAccountTypes().size()]));
 
         System.out.println("Init test OK");
+    }
+
+    @Test
+    public void testDTOFilteringForSpringDao() {
+        System.out.println("Testing DTO filtering via Spring Data JpaSpecExecutor");
+
+        JpaDao<Client, ClientSpecificationDto> dao = processor.dao(ClientSpecificationDto.class);
+        ClientSpecificationDto filter = new ClientSpecificationDto();
+        assertEquals(8, dao.count(filter));
+
+        filter.setEmail(CLIENT_EMAIL);
+        Client client = dao.getOne(filter);
+        assertEquals(CLIENT_EMAIL, client.getLoginData().getEmail());
+        assertEquals(BIRTHDAY, client.getPersonalData().getBirthday());
+
+        filter = new ClientSpecificationDto();
+        filter.setName("Yurii");
+        filter.setBirthdayFrom(BIRTHDAY);
+        assertEquals(2, dao.count(filter));
+
+        filter = new ClientSpecificationDto();
+        filter.setName("Abc");
+        filter.setBirthdayTo(new Date());
+        assertEquals(4, dao.count(filter));
+
+        filter = new ClientSpecificationDto();
+        filter.setGender(F);
+        assertEquals(4, dao.count(filter));
+
+        JpaDao<Client, ClientExtendableSpecificationDto> dao2 = processor.dao(ClientExtendableSpecificationDto.class);
+
+        ClientExtendableSpecificationDto filter2 = new ClientExtendableSpecificationDto();
+        filter2.setNames(Arrays.asList("Yurii", "Abc"));
+        assertEquals(5, dao2.count(filter2));
+
+        filter2 = new ClientExtendableSpecificationDto();
+        filter2.setAmount(new BigDecimal(1_000));
+        assertEquals(1, dao2.count(filter2));
+
+        filter2 = new ClientExtendableSpecificationDto();
+        filter2.setNames(Arrays.asList("Yurii", "Abc"));
+        filter2.setOnlyAdults(true);
+        assertEquals(1, dao2.count(filter2));
+
+        System.out.println("DTO filtering via Spring Data JpaSpecExecutor OK");
+    }
+
+    @Test
+    public void testDTOFilteringForEMRepo() {
+        System.out.println("Testing DTO filtering via JPA EntityManager");
+
+        ClientSpecificationDto filter = new ClientSpecificationDto();
+        assertEquals(8, repo.count(filter));
+
+        filter.setEmail(CLIENT_EMAIL);
+        Client client = repo.getOne(filter);
+        assertEquals(CLIENT_EMAIL, client.getLoginData().getEmail());
+        assertEquals(BIRTHDAY, client.getPersonalData().getBirthday());
+
+        filter = new ClientSpecificationDto();
+        filter.setName("Yurii");
+        filter.setBirthdayFrom(BIRTHDAY);
+        assertEquals(2, repo.count(filter));
+
+        filter = new ClientSpecificationDto();
+        filter.setName("Abc");
+        filter.setBirthdayTo(new Date());
+        assertEquals(4, repo.count(filter));
+
+        filter = new ClientSpecificationDto();
+        filter.setGender(F);
+        assertEquals(4, repo.count(filter));
+
+        ClientExtendableSpecificationDto filter2 = new ClientExtendableSpecificationDto();
+        filter2.setNames(Arrays.asList("Yurii", "Abc"));
+        assertEquals(5, repo.count(filter2));
+
+        filter2 = new ClientExtendableSpecificationDto();
+        filter2.setAmount(new BigDecimal(1_000));
+        assertEquals(1, repo.count(filter2));
+
+        filter2 = new ClientExtendableSpecificationDto();
+        filter2.setNames(Arrays.asList("Yurii", "Abc"));
+        filter2.setOnlyAdults(true);
+        assertEquals(1, repo.count(filter2));
+
+        System.out.println("DTO filtering via JPA EntityManager OK");
     }
 
     @Test

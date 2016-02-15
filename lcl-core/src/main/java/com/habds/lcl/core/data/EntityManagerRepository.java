@@ -21,74 +21,103 @@ import java.util.stream.Collectors;
  */
 public class EntityManagerRepository {
 
-    private Processor processor;
-    private EntityManager em;
+    protected Processor processor;
+    protected EntityManager em;
 
-    public <S, T> List<T> getAll(Map<String, Filter> filters, Class<T> targetClass) {
-        return getAll(filters, new PagingAndSorting(), targetClass);
+    public <DTO> List<DTO> getAll(Map<String, Filter> filters, Class<DTO> dtoClass) {
+        return getAll(filters, new PagingAndSorting(), dtoClass);
     }
 
-    public <S, T> List<T> getAll(Map<String, Filter> filters, PagingAndSorting pagingAndSorting, Class<T> targetClass) {
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-        Class<S> sourceClass = processor.getLink(targetClass);
-        Specs<S> specs = processor.createSpecs(filters, targetClass);
+    public <ENTITY, DTO> List<ENTITY> getAll(DTO dto) {
+        return getAll(dto, new PagingAndSorting());
+    }
 
-        CriteriaQuery<S> criteriaQuery = cb.createQuery(sourceClass);
-        Root<S> root = criteriaQuery.from(sourceClass);
+    public <DTO> List<DTO> getAll(Map<String, Filter> filters, PagingAndSorting pagingAndSorting, Class<DTO> dtoClass) {
+        return processor.process(
+            getAll(processor.createSpecs(filters, dtoClass), pagingAndSorting, dtoClass),
+            dtoClass);
+    }
+
+    public <ENTITY, DTO> List<ENTITY> getAll(DTO dto, PagingAndSorting pagingAndSorting) {
+        return getAll(processor.createSpecs(dto), pagingAndSorting, dto.getClass());
+    }
+
+    public <ENTITY, DTO> List<ENTITY> getAll(Specs<ENTITY> specs, PagingAndSorting pagingAndSorting,
+                                             Class<DTO> dtoClass) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        Class<ENTITY> entityClass = processor.getLink(dtoClass);
+
+        CriteriaQuery<ENTITY> criteriaQuery = cb.createQuery(entityClass);
+        Root<ENTITY> root = criteriaQuery.from(entityClass);
         criteriaQuery.where(specs.buildPredicate(root, criteriaQuery, cb));
 
         List<Order> orders = pagingAndSorting.getSortings().entrySet().stream()
             .map(e -> {
-                Path<?> path = processor.getJpaPath(targetClass, e.getKey(), root, criteriaQuery, cb);
+                Path<?> path = processor.getJpaPath(dtoClass, e.getKey(), root, criteriaQuery, cb);
                 return e.getValue() ? cb.asc(path) : cb.desc(path);
             }).collect(Collectors.toList());
         criteriaQuery.orderBy(orders);
 
-        TypedQuery<S> query = em.createQuery(criteriaQuery);
+        TypedQuery<ENTITY> query = em.createQuery(criteriaQuery);
         if (pagingAndSorting.getPage() != null) {
             query.setFirstResult(pagingAndSorting.getPage() * pagingAndSorting.getPageSize());
         }
         if (pagingAndSorting.getPageSize() != null) {
             query.setMaxResults(pagingAndSorting.getPageSize());
         }
-        List<S> result = query.getResultList();
-        return result.stream().map(s -> processor.process(s, targetClass)).collect(Collectors.toList());
+        return query.getResultList();
     }
 
-    public <T> long count(Map<String, Filter> filters, Class<T> targetClass) {
-        return createCountQuery(filters, targetClass).getSingleResult();
+    public <DTO> long count(Map<String, Filter> filters, Class<DTO> dtoClass) {
+        return createCountQuery(processor.createSpecs(filters, dtoClass), dtoClass).getSingleResult();
     }
 
-    public <S, T> T getOne(Map<String, Filter> filters, Class<T> targetClass) {
+    public <DTO> long count(DTO dto) {
+        return createCountQuery(processor.createSpecs(dto), dto.getClass()).getSingleResult();
+    }
+
+    public <DTO> DTO getOne(Map<String, Filter> filters, Class<DTO> dtoClass) {
         try {
-            return processor.process(this.<S, T>createQuery(filters, targetClass).getSingleResult(), targetClass);
+            return processor.process(
+                createQuery(processor.createSpecs(filters, dtoClass), dtoClass).getSingleResult(),
+                dtoClass);
         } catch (NoResultException ex) {
             return null;
         }
     }
 
-    public <T> boolean exists(Map<String, Filter> filters, Class<T> targetClass) {
-        return count(filters, targetClass) > 0;
+    public <ENTITY, DTO> ENTITY getOne(DTO dto) {
+        try {
+            return createQuery(processor.<ENTITY, DTO>createSpecs(dto), dto.getClass()).getSingleResult();
+        } catch (NoResultException ex) {
+            return null;
+        }
     }
 
-    private <S, T> TypedQuery<S> createQuery(Map<String, Filter> filters, Class<T> targetClass) {
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-        Class<S> sourceClass = processor.getLink(targetClass);
-        Specs<S> specs = processor.createSpecs(filters, targetClass);
+    public <DTO> boolean exists(Map<String, Filter> filters, Class<DTO> dtoClass) {
+        return count(filters, dtoClass) > 0;
+    }
 
-        CriteriaQuery<S> query = cb.createQuery(sourceClass);
-        Root<S> root = query.from(sourceClass);
+    public <DTO> boolean exists(DTO dto) {
+        return count(dto) > 0;
+    }
+
+    private <ENTITY, DTO> TypedQuery<ENTITY> createQuery(Specs<ENTITY> specs, Class<DTO> dtoClass) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        Class<ENTITY> entityClass = processor.getLink(dtoClass);
+
+        CriteriaQuery<ENTITY> query = cb.createQuery(entityClass);
+        Root<ENTITY> root = query.from(entityClass);
         query.where(specs.buildPredicate(root, query, cb));
         return em.createQuery(query);
     }
 
-    private <S, T> TypedQuery<Long> createCountQuery(Map<String, Filter> filters, Class<T> targetClass) {
-        Class<S> sourceClass = processor.getLink(targetClass);
-        Specs<S> specs = processor.createSpecs(filters, targetClass);
+    private <ENTITY, DTO> TypedQuery<Long> createCountQuery(Specs<ENTITY> specs, Class<DTO> dtoClass) {
+        Class<ENTITY> entityClass = processor.getLink(dtoClass);
 
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Long> query = cb.createQuery(Long.class);
-        Root<S> root = query.from(sourceClass);
+        Root<ENTITY> root = query.from(entityClass);
         query.select(cb.count(root));
         query.where(specs.buildPredicate(root, query, cb));
         return em.createQuery(query);

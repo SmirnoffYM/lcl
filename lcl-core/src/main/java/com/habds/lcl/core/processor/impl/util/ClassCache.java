@@ -104,7 +104,8 @@ public class ClassCache {
     }
 
     public Map<String, Property> getAllProperties(Class clazz) {
-        return classProperties.get(clazz);
+        return getAllFields(clazz).entrySet().stream()
+            .collect(Collectors.toMap(Map.Entry::getKey, e -> new Property(clazz, e.getKey())));
     }
 
     public void cacheFieldsAndMethods(Class clazz) {

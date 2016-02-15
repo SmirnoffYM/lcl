@@ -19,4 +19,8 @@ import javax.persistence.criteria.Root;
 public interface Specs<T> {
 
     Predicate buildPredicate(Root<T> root, CriteriaQuery<?> query, CriteriaBuilder cb);
+
+    default Specs<T> and(Specs<T> other) {
+        return (root, query, cb) -> cb.and(this.buildPredicate(root, query, cb), other.buildPredicate(root, query, cb));
+    }
 }

@@ -4,7 +4,9 @@ import com.habds.lcl.core.data.filter.Converter;
 import com.habds.lcl.core.data.filter.Filter;
 
 import javax.persistence.criteria.*;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,8 +24,8 @@ public class In extends Filter<Object> {
     public In() {
     }
 
-    public In(List<Object> values) {
-        this.values = values;
+    public In(Collection<Object> values) {
+        this.values = new ArrayList<>(values);
     }
 
     public In(Object... values) {

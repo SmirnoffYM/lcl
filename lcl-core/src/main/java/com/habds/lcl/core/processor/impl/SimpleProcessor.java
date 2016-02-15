@@ -1,16 +1,22 @@
 package com.habds.lcl.core.processor.impl;
 
 import com.habds.lcl.core.annotation.ClassLink;
+import com.habds.lcl.core.annotation.Ignored;
 import com.habds.lcl.core.data.Specs;
-import com.habds.lcl.core.data.filter.Converter;
-import com.habds.lcl.core.data.filter.Filter;
+import com.habds.lcl.core.data.filter.*;
+import com.habds.lcl.core.data.filter.From;
+import com.habds.lcl.core.data.filter.In;
+import com.habds.lcl.core.data.filter.Like;
+import com.habds.lcl.core.data.filter.impl.*;
 import com.habds.lcl.core.processor.LinkEstablishingException;
 import com.habds.lcl.core.processor.LinkProcessingException;
 import com.habds.lcl.core.processor.LinkProcessor;
 import com.habds.lcl.core.processor.Processor;
 import com.habds.lcl.core.processor.impl.util.ClassCache;
+import com.habds.lcl.core.processor.impl.util.Property;
 
 import javax.persistence.criteria.*;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -130,6 +136,52 @@ public class SimpleProcessor implements Processor {
                     .map(e -> createPredicate(dtoClass, e.getKey(), e.getValue(), root, query, cb))
                     .toArray(Predicate[]::new)
             );
+    }
+
+    @Override
+    public <ENTITY, DTO> Specs<ENTITY> createSpecs(DTO dto) {
+        Map<String, Filter> filters = new HashMap<>();
+        ClassCache.getInstance().getAllProperties(dto.getClass()).forEach((name, property) -> {
+            Filter filter = toFilter(dto, property);
+            if (filter != null) {
+                filters.put(name, filter);
+            }
+        });
+        Specs<ENTITY> specs = createSpecs(filters, dto.getClass());
+        if (dto instanceof Specs) {
+            return ((Specs) dto).and(specs);
+        }
+        return specs;
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    protected <DTO> Filter toFilter(DTO dto, Property<DTO, Object> property) {
+        if (property.hasFieldAnnotation(Ignored.class)) {
+            return null;
+        }
+        Object value = property.getter().apply(dto);
+        if (value == null) {
+            return null;
+        }
+        if (property.hasFieldAnnotation(From.class)) {
+            From from = property.getFieldAnnotation(From.class);
+            return from.exclusive() ? new Range<>().fromExclusive(value) : new Range<>(value, null);
+        }
+        if (property.hasFieldAnnotation(To.class)) {
+            To to = property.getFieldAnnotation(To.class);
+            return to.exclusive() ? new Range<>().toExclusive(value) : new Range<>(null, value);
+        }
+        if (value instanceof String && property.hasFieldAnnotation(Like.class)) {
+            return new com.habds.lcl.core.data.filter.impl.Like(
+                (String) value, property.getFieldAnnotation(Like.class).useLowerCase());
+        }
+        if (property.hasFieldAnnotation(In.class) && value instanceof Collection) {
+            return new com.habds.lcl.core.data.filter.impl.In((Collection<Object>) value);
+        }
+        if (property.hasFieldAnnotation(In.class) && value.getClass().isArray()) {
+            return new com.habds.lcl.core.data.filter.impl.In((Object[]) value);
+        }
+        return new Equals(value);
     }
 
     protected <ENTITY, DTO> Predicate createPredicate(Class<DTO> targetClass, String path, Filter filter,
