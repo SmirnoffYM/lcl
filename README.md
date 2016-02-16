@@ -304,16 +304,18 @@ account's type (not ``SAVINGS``) and ordered by amount of their primary banking 
     }
 ```
 
-Currently, 4 filter ``$type``s are supported: ``equals`` 
-(the default one, will be taken if ``$type`` isn't specified explicitly), ``in``, ``like`` and ``range``. 
+Currently, 5 filter ``$type``s are supported: ``equals`` 
+(the default one, will be taken if ``$type`` isn't specified explicitly), ``in``, ``like``, ``null`` and ``range``. 
 Filter options are next:
 
+- no essential options for ``null`` filter;
 - ``value`` option for ``equals`` filter;
 - ``value`` and ``useLowerCase`` options for ``like`` filter;
 - ``values`` option for ``in`` filter (expecting array here);
 - ``from``, ``fromExclusive``, ``to`` and ``toExclusive`` options for ``range`` filter.
 
-Additionally, each filter has ``negated`` option (non-mandatory, ``false`` by default) to invert filtering predicate.
+Additionally, each filter (incl. ``null``) has ``negated`` option (non-mandatory, ``false`` by default) 
+to invert filtering predicate.
 
 Paging and sorting request/response parameters (Sort and Pageable) remain the same as before - please refer to 
 Spring Data documentation for more information.

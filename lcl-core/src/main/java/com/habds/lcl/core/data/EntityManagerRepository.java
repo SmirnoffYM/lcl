@@ -25,21 +25,24 @@ public class EntityManagerRepository {
     protected EntityManager em;
 
     public <DTO> List<DTO> getAll(Map<String, Filter> filters, Class<DTO> dtoClass) {
-        return getAll(filters, new PagingAndSorting(), dtoClass);
+        return getAll(processor.createSpecs(filters, dtoClass), new PagingAndSorting(), dtoClass);
     }
 
     public <ENTITY, DTO> List<ENTITY> getAll(DTO dto) {
-        return getAll(dto, new PagingAndSorting());
+        return getAll(processor.createSpecs(dto), new PagingAndSorting(), dto.getClass());
     }
 
-    public <DTO> List<DTO> getAll(Map<String, Filter> filters, PagingAndSorting pagingAndSorting, Class<DTO> dtoClass) {
-        return processor.process(
-            getAll(processor.createSpecs(filters, dtoClass), pagingAndSorting, dtoClass),
-            dtoClass);
+    public <ENTITY, DTO> Sheet<DTO> getAll(Map<String, Filter> filters, PagingAndSorting pagingAndSorting,
+                                           Class<DTO> dtoClass) {
+        Specs<ENTITY> specs = processor.createSpecs(filters, dtoClass);
+        List<DTO> content = processor.process(getAll(specs, pagingAndSorting, dtoClass), dtoClass);
+        return new Sheet<>(content, createCountQuery(specs, dtoClass).getSingleResult(), pagingAndSorting);
     }
 
-    public <ENTITY, DTO> List<ENTITY> getAll(DTO dto, PagingAndSorting pagingAndSorting) {
-        return getAll(processor.createSpecs(dto), pagingAndSorting, dto.getClass());
+    public <ENTITY, DTO> Sheet<ENTITY> getAll(DTO dto, PagingAndSorting pagingAndSorting) {
+        Specs<ENTITY> specs = processor.createSpecs(dto);
+        List<ENTITY> content = getAll(specs, pagingAndSorting, dto.getClass());
+        return new Sheet<>(content, createCountQuery(specs, dto.getClass()).getSingleResult(), pagingAndSorting);
     }
 
     public <ENTITY, DTO> List<ENTITY> getAll(Specs<ENTITY> specs, PagingAndSorting pagingAndSorting,

@@ -2,11 +2,9 @@ package com.habds.lcl.examples.simple;
 
 import com.habds.lcl.core.data.EntityManagerRepository;
 import com.habds.lcl.core.data.PagingAndSorting;
+import com.habds.lcl.core.data.Sheet;
 import com.habds.lcl.core.data.filter.Filter;
-import com.habds.lcl.core.data.filter.impl.Equals;
-import com.habds.lcl.core.data.filter.impl.In;
-import com.habds.lcl.core.data.filter.impl.Like;
-import com.habds.lcl.core.data.filter.impl.Range;
+import com.habds.lcl.core.data.filter.impl.*;
 import com.habds.lcl.examples.config.AppConfig;
 import com.habds.lcl.examples.dto.*;
 import com.habds.lcl.examples.persistence.bo.*;
@@ -135,6 +133,15 @@ public class SpringH2Test {
         ClientSpecificationDto filter = new ClientSpecificationDto();
         assertEquals(8, dao.count(filter));
 
+        filter = new ClientSpecificationDto();
+        filter.setSelectedAccountAbsent(true);
+        assertEquals(6, dao.count(filter));
+
+        filter = new ClientSpecificationDto();
+        filter.setSelectedAccountAbsent(false);
+        assertEquals(2, dao.count(filter));
+
+        filter = new ClientSpecificationDto();
         filter.setEmail(CLIENT_EMAIL);
         Client client = dao.getOne(filter);
         assertEquals(CLIENT_EMAIL, client.getLoginData().getEmail());
@@ -179,6 +186,15 @@ public class SpringH2Test {
         ClientSpecificationDto filter = new ClientSpecificationDto();
         assertEquals(8, repo.count(filter));
 
+        filter = new ClientSpecificationDto();
+        filter.setSelectedAccountAbsent(true);
+        assertEquals(6, repo.count(filter));
+
+        filter = new ClientSpecificationDto();
+        filter.setSelectedAccountAbsent(false);
+        assertEquals(2, repo.count(filter));
+
+        filter = new ClientSpecificationDto();
         filter.setEmail(CLIENT_EMAIL);
         Client client = repo.getOne(filter);
         assertEquals(CLIENT_EMAIL, client.getLoginData().getEmail());
@@ -222,6 +238,14 @@ public class SpringH2Test {
         assertEquals(8, dao.count(new HashMap<>()));
 
         Map<String, Filter> filters = new HashMap<>();
+        filters.put("selectedAccount", new Null());
+        assertEquals(6, dao.count(filters));
+
+        filters = new HashMap<>();
+        filters.put("selectedAccount", new Null(false));
+        assertEquals(2, dao.count(filters));
+
+        filters = new HashMap<>();
         filters.put("login", new Equals(CLIENT_EMAIL));
         ClientDto client = dao.getOne(filters);
         assertEquals(CLIENT_EMAIL, client.getLogin());
@@ -269,6 +293,14 @@ public class SpringH2Test {
         assertEquals(8, repo.count(new HashMap<>(), ClientDto.class));
 
         Map<String, Filter> filters = new HashMap<>();
+        filters.put("selectedAccount", new Null());
+        assertEquals(6, repo.count(filters, ClientDto.class));
+
+        filters = new HashMap<>();
+        filters.put("selectedAccount", new Null(false));
+        assertEquals(2, repo.count(filters, ClientDto.class));
+
+        filters = new HashMap<>();
         filters.put("login", new Equals(CLIENT_EMAIL));
         ClientDto client = repo.getOne(filters, ClientDto.class);
         assertEquals(CLIENT_EMAIL, client.getLogin());
@@ -349,29 +381,43 @@ public class SpringH2Test {
 
         Map<String, Filter> filters = new HashMap<>();
         filters.put("name", new Like("Yurii").negate());
-        List<ClientDto> clients = repo.getAll(
+        Sheet<ClientDto> clients = repo.getAll(
             filters,
             new PagingAndSorting().withPagination(0, 5).orderBy("name", false).orderBy("login"),
             ClientDto.class);
         assertEquals(5, clients.size());
+        assertEquals(6, clients.getTotalElements());
+        assertEquals(2, clients.getTotalPages());
+        assertEquals(0, clients.getPage().longValue());
+        assertEquals(5, clients.getPageSize().longValue());
         assertEquals(0, clients.stream().filter(c -> c.getName().equals("Yurii")).count());
 
-        assertEquals("test Abc", clients.get(0).getName());
-        assertEquals("test", clients.get(1).getName());
-        assertEquals("John", clients.get(2).getName());
-        assertEquals("abc1", clients.get(3).getLogin());
-        assertEquals("abc2", clients.get(4).getLogin());
+        assertEquals("test Abc", clients.getContent().get(0).getName());
+        assertEquals("test", clients.getContent().get(1).getName());
+        assertEquals("John", clients.getContent().get(2).getName());
+        assertEquals("abc1", clients.getContent().get(3).getLogin());
+        assertEquals("abc2", clients.getContent().get(4).getLogin());
 
         clients = repo.getAll(new HashMap<>(), new PagingAndSorting().withPagination(0, 1).orderBy("uid"),
             ClientDto.class);
         assertEquals(1, clients.size());
-        assertEquals("lead@lead.com", clients.get(0).getLogin());
+        assertEquals("lead@lead.com", clients.getContent().get(0).getLogin());
 
         clients = repo.getAll(new HashMap<>(), new PagingAndSorting().orderBy("selectedAccount.amount", false),
             ClientDto.class);
         assertEquals(8, clients.size());
-        assertEquals("test Abc", clients.get(0).getName());
-        assertEquals("Yurii", clients.get(1).getName());
+        assertEquals("test Abc", clients.getContent().get(0).getName());
+        assertEquals("Yurii", clients.getContent().get(1).getName());
+
+        clients = repo.getAll(
+            filters,
+            new PagingAndSorting().withPagination(0, 6).orderBy("name", false).orderBy("login"),
+            ClientDto.class);
+        assertEquals(6, clients.size());
+        assertEquals(6, clients.getTotalElements());
+        assertEquals(1, clients.getTotalPages());
+        assertEquals(0, clients.getPage().longValue());
+        assertEquals(6, clients.getPageSize().longValue());
 
         System.out.println("Filtering and sorting via JPA EntityManager OK");
     }

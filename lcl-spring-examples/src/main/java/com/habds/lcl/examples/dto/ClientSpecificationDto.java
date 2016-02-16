@@ -2,10 +2,7 @@ package com.habds.lcl.examples.dto;
 
 import com.habds.lcl.core.annotation.ClassLink;
 import com.habds.lcl.core.annotation.Link;
-import com.habds.lcl.core.data.filter.From;
-import com.habds.lcl.core.data.filter.In;
-import com.habds.lcl.core.data.filter.Like;
-import com.habds.lcl.core.data.filter.To;
+import com.habds.lcl.core.data.filter.*;
 import com.habds.lcl.examples.persistence.bo.AccountType;
 import com.habds.lcl.examples.persistence.bo.Client;
 import com.habds.lcl.examples.persistence.bo.Gender;
@@ -37,6 +34,10 @@ public class ClientSpecificationDto {
     @In
     @Link("accounts.type")
     private List<AccountType> ownedAccountTypes;
+
+    @IsNull
+    @Link("selectedAccount")
+    private Boolean selectedAccountAbsent;
 
     public String getEmail() {
         return email;
@@ -84,5 +85,13 @@ public class ClientSpecificationDto {
 
     public void setOwnedAccountTypes(List<AccountType> ownedAccountTypes) {
         this.ownedAccountTypes = ownedAccountTypes;
+    }
+
+    public Boolean getSelectedAccountAbsent() {
+        return selectedAccountAbsent;
+    }
+
+    public void setSelectedAccountAbsent(Boolean selectedAccountAbsent) {
+        this.selectedAccountAbsent = selectedAccountAbsent;
     }
 }

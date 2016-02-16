@@ -181,6 +181,10 @@ public class SimpleProcessor implements Processor {
         if (property.hasFieldAnnotation(In.class) && value.getClass().isArray()) {
             return new com.habds.lcl.core.data.filter.impl.In((Object[]) value);
         }
+        if (property.hasFieldAnnotation(IsNull.class)
+            && (value.getClass() == boolean.class || value.getClass() == Boolean.class)) {
+            return new Null((boolean) value);
+        }
         return new Equals(value);
     }
 

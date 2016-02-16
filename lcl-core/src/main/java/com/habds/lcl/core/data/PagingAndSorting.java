@@ -12,11 +12,17 @@ import java.util.Map;
  */
 public class PagingAndSorting {
 
-    private Integer page;
-    private Integer pageSize;
-    private Map<String, Boolean> sortings = new LinkedHashMap<>();
+    protected Integer page;
+    protected Integer pageSize;
+    protected Map<String, Boolean> sortings = new LinkedHashMap<>();
 
     public PagingAndSorting() {
+    }
+
+    public PagingAndSorting(Integer page, Integer pageSize, Map<String, Boolean> sortings) {
+        this.page = page;
+        this.pageSize = pageSize;
+        this.sortings = sortings;
     }
 
     public PagingAndSorting(Integer page, Integer pageSize) {
