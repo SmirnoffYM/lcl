@@ -123,7 +123,7 @@ First of all, add ``lcl-spring`` into your project. Here's Maven dependency:
     <dependency>
         <groupId>com.habds</groupId>
         <artifactId>lcl-spring</artifactId>
-        <version>0.9.1.RELEASE</version>
+        <version>0.9.4.RELEASE</version>
     </dependency>
 ```
 
