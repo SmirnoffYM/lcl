@@ -369,9 +369,6 @@ public class SpringH2Test {
         assertEquals("test Abc", clients.get(0).getName());
         assertEquals("Yurii", clients.get(1).getName());
 
-        // FIXME: Sorting on field like @ManyToOne-@OneToOne-@ManyToOne-String doesn't work properly on Spring Data JPA,
-        // FIXME: returns only records without nulls. Probably raise a bug in JIRA?
-
         System.out.println("Filtering and sorting via Spring Data JpaSpecExecutor OK");
     }
 
