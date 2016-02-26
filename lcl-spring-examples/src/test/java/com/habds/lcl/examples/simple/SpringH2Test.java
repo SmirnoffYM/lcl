@@ -5,6 +5,7 @@ import com.habds.lcl.core.data.PagingAndSorting;
 import com.habds.lcl.core.data.Sheet;
 import com.habds.lcl.core.data.filter.Filter;
 import com.habds.lcl.core.data.filter.impl.*;
+import com.habds.lcl.core.processor.impl.SimpleProcessor;
 import com.habds.lcl.examples.config.AppConfig;
 import com.habds.lcl.examples.dto.*;
 import com.habds.lcl.examples.persistence.bo.*;
@@ -16,6 +17,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -47,8 +49,12 @@ public class SpringH2Test {
     public static final String CLIENT_EMAIL = "some@email.net";
     public static final Date BIRTHDAY = new GregorianCalendar(1992, Calendar.AUGUST, 2).getTime();
 
+    @Qualifier("springProcessor")
     @Autowired
-    private SpringProcessor processor;
+    private SpringProcessor springProcessor;
+    @Qualifier("processor")
+    @Autowired
+    private SimpleProcessor emProcessor;
     @Autowired
     private ClientDao clientDao;
     @Autowired
@@ -100,7 +106,7 @@ public class SpringH2Test {
 
         Client client = clientDao
             .findOne((root, query, cb) -> cb.equal(root.get("loginData").get("email"), CLIENT_EMAIL));
-        ClientDto clientDto = processor.process(client, ClientDto.class);
+        ClientDto clientDto = springProcessor.process(client, ClientDto.class);
         assertEquals(BIRTHDAY, clientDto.getBirthday());
         assertTrue(clientDto.isAdult());
         assertEquals("Yurii", clientDto.getName());
@@ -129,7 +135,7 @@ public class SpringH2Test {
     public void testDTOFilteringForSpringDao() {
         System.out.println("Testing DTO filtering via Spring Data JpaSpecExecutor");
 
-        JpaDao<Client, ClientSpecificationDto> dao = processor.dao(ClientSpecificationDto.class);
+        JpaDao<Client, ClientSpecificationDto> dao = springProcessor.dao(ClientSpecificationDto.class);
         ClientSpecificationDto filter = new ClientSpecificationDto();
         assertEquals(8, dao.count(filter));
 
@@ -161,7 +167,7 @@ public class SpringH2Test {
         filter.setGender(F);
         assertEquals(4, dao.count(filter));
 
-        JpaDao<Client, ClientExtendableSpecificationDto> dao2 = processor.dao(ClientExtendableSpecificationDto.class);
+        JpaDao<Client, ClientExtendableSpecificationDto> dao2 = springProcessor.dao(ClientExtendableSpecificationDto.class);
 
         ClientExtendableSpecificationDto filter2 = new ClientExtendableSpecificationDto();
         filter2.setNames(Arrays.asList("Yurii", "Abc"));
@@ -234,7 +240,7 @@ public class SpringH2Test {
     public void testFilteringForSpringDao() {
         System.out.println("Testing filtering via Spring Data JpaSpecExecutor");
 
-        JpaDao<Client, ClientDto> dao = processor.dao(ClientDto.class);
+        JpaDao<Client, ClientDto> dao = springProcessor.dao(ClientDto.class);
         assertEquals(8, dao.count(new HashMap<>()));
 
         Map<String, Filter> filters = new HashMap<>();
@@ -344,7 +350,7 @@ public class SpringH2Test {
     public void testFilteringAndSortingForSpringDao() {
         System.out.println("Testing filtering and sorting via Spring Data JpaSpecExecutor");
 
-        JpaDao<Client, ClientDto> dao = processor.dao(ClientDto.class);
+        JpaDao<Client, ClientDto> dao = springProcessor.dao(ClientDto.class);
 
         Pageable pageable = new PageRequest(0, 5, new Sort(Sort.Direction.DESC, "name").and(new Sort("login")));
         Map<String, Filter> filters = new HashMap<>();
@@ -420,11 +426,11 @@ public class SpringH2Test {
     }
 
     @Test
-    public void testCreateAndUpdate() {
-        System.out.println("Testing create&update via Spring Data JpaSpecExecutor");
+    public void testCreateAndUpdateForSpringProcessor() {
+        System.out.println("Testing create&update via Spring Processor");
 
-        JpaDao<Client, NewClientDto> newClientDao = processor.dao(NewClientDto.class);
-        JpaDao<Client, UpdateClientDto> updateClientDao = processor.dao(UpdateClientDto.class);
+        JpaDao<Client, NewClientDto> newClientDao = springProcessor.dao(NewClientDto.class);
+        JpaDao<Client, UpdateClientDto> updateClientDao = springProcessor.dao(UpdateClientDto.class);
 
         Date birthday = new Date();
         NewClientDto newClient = new NewClientDto("test", "test name", birthday, M);
@@ -452,6 +458,39 @@ public class SpringH2Test {
         assertEquals(updateRequest.getSelectedAccount(), client.getSelectedAccount().getNumber());
         assertEquals(account.getCreationDate(), client.getSelectedAccount().getCreationDate());
 
-        System.out.println("Create&update via Spring Data JpaSpecExecutor OK");
+        System.out.println("Create&update via Spring Processor OK");
+    }
+
+    @Test
+    public void testCreateAndUpdateForEMRepo() {
+        System.out.println("Testing create&update via EMRepo & JpaLinkProcessor");
+
+        Date birthday = new Date();
+        NewClientDto newClient = new NewClientDto("test", "test name", birthday, M);
+        Map<String, Object> predefined = new HashMap<>();
+        predefined.put("loginData.password", "password");
+
+        Client client = emProcessor.create(newClient, predefined);
+
+        assertEquals(newClient.getName(), client.getPersonalData().getName());
+        assertEquals(newClient.getLogin(), client.getLoginData().getEmail());
+        assertEquals(newClient.getGender(), client.getPersonalData().getGender());
+        assertEquals(newClient.getBirthday(), client.getPersonalData().getBirthday());
+        assertNull(client.getSelectedAccount());
+
+        Account account = new Account("EUR", AccountType.CHECKING,
+            new AccountState(BigDecimal.ZERO), new Date(666));
+        account = repo.getEm().merge(account);
+
+        UpdateClientDto updateRequest = new UpdateClientDto("other name", null, F, account.getNumber());
+        client = emProcessor.merge(client, updateRequest);
+
+        assertEquals(updateRequest.getName(), client.getPersonalData().getName());
+        assertEquals(updateRequest.getGender(), client.getPersonalData().getGender());
+        assertNull(client.getPersonalData().getBirthday());
+        assertEquals(updateRequest.getSelectedAccount(), client.getSelectedAccount().getNumber());
+        assertEquals(account.getCreationDate(), client.getSelectedAccount().getCreationDate());
+
+        System.out.println("Create&update via EMRepo & JpaLinkProcessor OK");
     }
 }

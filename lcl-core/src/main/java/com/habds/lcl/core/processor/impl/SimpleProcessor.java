@@ -5,9 +5,9 @@ import com.habds.lcl.core.annotation.Ignored;
 import com.habds.lcl.core.data.Specs;
 import com.habds.lcl.core.data.filter.*;
 import com.habds.lcl.core.data.filter.From;
-import com.habds.lcl.core.data.filter.In;
-import com.habds.lcl.core.data.filter.Like;
-import com.habds.lcl.core.data.filter.impl.*;
+import com.habds.lcl.core.data.filter.impl.Equals;
+import com.habds.lcl.core.data.filter.impl.Null;
+import com.habds.lcl.core.data.filter.impl.Range;
 import com.habds.lcl.core.processor.LinkEstablishingException;
 import com.habds.lcl.core.processor.LinkProcessingException;
 import com.habds.lcl.core.processor.LinkProcessor;
@@ -16,9 +16,7 @@ import com.habds.lcl.core.processor.impl.util.ClassCache;
 import com.habds.lcl.core.processor.impl.util.Property;
 
 import javax.persistence.criteria.*;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Default processor implementation. Requires calling {@link SimpleProcessor#configure()}
@@ -49,7 +47,7 @@ public class SimpleProcessor implements Processor {
      * @param dtos DTOs - classes marked with {@link ClassLink} annotation
      * @return this object
      */
-    public SimpleProcessor add(Class... dtos) {
+    public SimpleProcessor add(List<Class> dtos) {
         for (Class<?> dto : dtos) {
             try {
                 MappingMetadata mappingMetadata = new MappingMetadata<>(linkProcessor, dto);
@@ -59,6 +57,10 @@ public class SimpleProcessor implements Processor {
             }
         }
         return this;
+    }
+
+    public SimpleProcessor add(Class... dtos) {
+        return add(Arrays.asList(dtos));
     }
 
     /**
@@ -123,9 +125,22 @@ public class SimpleProcessor implements Processor {
 
     @Override
     public <ENTITY> ENTITY merge(ENTITY entity, Map<String, ?> properties) {
+        if (entity == null) {
+            return null;
+        }
         properties.forEach((path, value) ->
             linkProcessor.setterMapping(path, entity.getClass(), null).map(entity, value));
         return entity;
+    }
+
+    @Override
+    public <ENTITY, DTO> ENTITY create(DTO dto) {
+        if (dto == null) {
+            return null;
+        }
+        Class<ENTITY> entityClass = (Class<ENTITY>) dto.getClass().getAnnotation(ClassLink.class).value();
+        ENTITY entity = ClassCache.construct(entityClass);
+        return merge(entity, dto);
     }
 
     @Override

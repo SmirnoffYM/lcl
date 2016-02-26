@@ -1,27 +1,42 @@
 package com.habds.lcl.core.data;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 /**
  * Paged result
  *
  * @author Yurii Smyrnov
- * @version 1
+ * @version 2
  * @see PagingAndSorting
  * @since 2/16/16 8:04 PM
  */
-public class Sheet<E> extends PagingAndSorting {
+public class Sheet<E> {
 
     private Long totalPages;
     private long totalElements;
     private List<E> content;
+    private PagingAndSorting pageable;
 
-    public Sheet(List<E> content, long totalElements, PagingAndSorting pageSettings) {
-        super(pageSettings.getPage(), pageSettings.getPageSize(), pageSettings.getSortings());
+    public Sheet(List<E> content, long totalElements, PagingAndSorting pageable) {
+        this.pageable = pageable;
         this.content = content;
         this.totalElements = totalElements;
-        this.totalPages = pageSize == null ? null : (long) Math.ceil((double) totalElements / (double) pageSize);
+        this.totalPages = getPageSize() == null
+            ? null : (long) Math.ceil((double) totalElements / (double) getPageSize());
+    }
+
+    public Integer getPage() {
+        return pageable.getPage();
+    }
+
+    public Integer getPageSize() {
+        return pageable.getPageSize();
+    }
+
+    public Map<String, Boolean> getSortings() {
+        return pageable.getSortings();
     }
 
     public Stream<E> stream() {

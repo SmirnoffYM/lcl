@@ -82,6 +82,43 @@ public interface Processor {
     <ENTITY> ENTITY merge(ENTITY entity, Map<String, ?> properties);
 
     /**
+     * Merge data from DTO and dot-path properties map into Entity
+     *
+     * @param entity     Entity
+     * @param dto        DTO
+     * @param properties dto-path properties map
+     * @param <ENTITY>   type of Entity
+     * @param <DTO>      type of DTO
+     * @return updated Entity
+     */
+    default <ENTITY, DTO> ENTITY merge(ENTITY entity, DTO dto, Map<String, ?> properties) {
+        return merge(merge(entity, dto), properties);
+    }
+
+    /**
+     * Create an Entity object using given DTO
+     *
+     * @param dto      DTO
+     * @param <ENTITY> type of Entity
+     * @param <DTO>    type of DTO
+     * @return entity with data from specified DTO
+     */
+    <ENTITY, DTO> ENTITY create(DTO dto);
+
+    /**
+     * Create an Entity object using given DTO and dot-path properties
+     *
+     * @param dto        DTO
+     * @param properties dto-path properties map
+     * @param <ENTITY>   type of Entity
+     * @param <DTO>      type of DTO
+     * @return entity with data from specified DTO and dot-path properties
+     */
+    default <ENTITY, DTO> ENTITY create(DTO dto, Map<String, ?> properties) {
+        return merge(create(dto), properties);
+    }
+
+    /**
      * Create JPA specification for Entity based on specified DTO and filters
      *
      * @param filters  filters: keys are names of properties of DTO class, values are actual {@link Filter} objects
@@ -97,7 +134,7 @@ public interface Processor {
      * filters map, see first argument in {@link Processor#createSpecs(Map, Class)} method.
      * Any DTO's field holding {@code null} value or marked with
      * {@link com.habds.lcl.core.annotation.Ignored} annotation will not be included into map.
-     *
+     * <p>
      * Additionally, filtering DTO can implement {@link Specs} interface itself, then the result of this method will be
      * composition of filters map predicate and
      * predicate built using {@link Specs#buildPredicate(Root, CriteriaQuery, CriteriaBuilder)} method.

@@ -1,9 +1,7 @@
 package com.habds.lcl.spring;
 
-import com.habds.lcl.core.annotation.ClassLink;
 import com.habds.lcl.core.data.Specs;
 import com.habds.lcl.core.data.filter.Filter;
-import com.habds.lcl.core.processor.impl.util.ClassCache;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -120,9 +118,7 @@ public class JpaDao<ENTITY, DTO> {
     }
 
     public ENTITY create(DTO dto, Map<String, ?> properties) {
-        Class<ENTITY> entityClass = (Class<ENTITY>) dtoClass.getAnnotation(ClassLink.class).value();
-        ENTITY entity = ClassCache.construct(entityClass);
-        return update(entity, dto, properties);
+        return processor.create(dto, properties);
     }
 
     public ENTITY createAndSave(DTO dto) {
@@ -138,8 +134,7 @@ public class JpaDao<ENTITY, DTO> {
     }
 
     public ENTITY update(ENTITY entity, DTO dto, Map<String, ?> properties) {
-        entity = processor.merge(entity, dto);
-        return processor.merge(entity, properties);
+        return processor.merge(entity, dto, properties);
     }
 
     public ENTITY updateAndSave(ENTITY entity, DTO dto) {
