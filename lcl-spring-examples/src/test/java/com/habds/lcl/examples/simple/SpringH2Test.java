@@ -182,6 +182,11 @@ public class SpringH2Test {
         filter2.setOnlyAdults(true);
         assertEquals(1, dao2.count(filter2));
 
+        filter2 = new ClientExtendableSpecificationDto();
+        filter2.setNames(Arrays.asList("Yurii", "Abc"));
+        filter2.setOnlyAdults(true);
+        assertEquals("Yurii", dao2.findAll(filter2, null, ClientDto.class).getContent().get(0).getName());
+
         System.out.println("DTO filtering via Spring Data JpaSpecExecutor OK");
     }
 

@@ -2,6 +2,7 @@ package com.habds.lcl.examples.mvc;
 
 import com.habds.lcl.core.data.filter.Filter;
 import com.habds.lcl.examples.dto.ClientDto;
+import com.habds.lcl.examples.dto.ClientSpecificationDto;
 import com.habds.lcl.examples.dto.NewClientDto;
 import com.habds.lcl.examples.dto.UpdateClientDto;
 import com.habds.lcl.examples.persistence.bo.Account;
@@ -37,9 +38,14 @@ public class ClientController {
     @Autowired
     private AccountDao accountDao;
 
-    @RequestMapping(method = RequestMethod.POST)
+    @RequestMapping(value = "v1/", method = RequestMethod.POST)
     private Page<ClientDto> read(@RequestBody Map<String, Filter> filters, Pageable pageable) {
         return processor.dao(ClientDto.class).findAll(filters, pageable);
+    }
+
+    @RequestMapping(value = "v2/", method = RequestMethod.POST)
+    private Page<ClientDto> read(@RequestBody ClientSpecificationDto filter, Pageable pageable) {
+        return processor.dao(ClientSpecificationDto.class).findAll(filter, pageable, ClientDto.class);
     }
 
     @RequestMapping(method = RequestMethod.PUT)

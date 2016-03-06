@@ -44,6 +44,10 @@ public class JpaDao<ENTITY, DTO> {
         return delegate.findAll(specs::buildPredicate);
     }
 
+    public <T> List<T> findAll(DTO filters, Class<T> otherDtoClass) {
+        return findAll(filters).stream().map(e -> processor.process(e, otherDtoClass)).collect(toList());
+    }
+
     public List<DTO> findAll(Map<String, Filter> filters, Sort sort) {
         Specs<ENTITY> specs = processor.createSpecs(filters, dtoClass);
         return processor.process(delegate.findAll(specs::buildPredicate, convertToEntity(sort)), dtoClass);
@@ -65,8 +69,13 @@ public class JpaDao<ENTITY, DTO> {
 
     public Page<ENTITY> findAll(DTO filters, Pageable page) {
         Specs<ENTITY> specs = processor.createSpecs(filters);
-        return delegate.findAll(specs::buildPredicate,
-                new PageRequest(page.getPageNumber(), page.getPageSize(), convertToEntity(page.getSort())));
+        return delegate.findAll(specs::buildPredicate, page == null
+            ? null : new PageRequest(page.getPageNumber(), page.getPageSize(), convertToEntity(page.getSort())));
+    }
+
+    public <T> Page<T> findAll(DTO filters, Pageable page, Class<T> otherDtoClass) {
+        Page<T> result = findAll(filters, page).map(e -> processor.process(e, otherDtoClass));
+        return overwriteSort(result, page);
     }
 
     private Sort convertToEntity(Sort sort) {
@@ -76,7 +85,7 @@ public class JpaDao<ENTITY, DTO> {
         return new Sort(StreamSupport.stream(sort.spliterator(), false).map(this::convertToEntity).collect(toList()));
     }
 
-    private Page<DTO> overwriteSort(Page<DTO> result, Pageable page) {
+    private <T> Page<T> overwriteSort(Page<T> result, Pageable page) {
         return new PageImpl<>(result.getContent(), page, result.getTotalElements());
     }
 

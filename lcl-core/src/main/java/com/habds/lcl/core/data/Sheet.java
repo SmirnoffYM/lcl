@@ -2,6 +2,8 @@ package com.habds.lcl.core.data;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -41,6 +43,12 @@ public class Sheet<E> {
 
     public Stream<E> stream() {
         return content.stream();
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> Sheet<T> map(Function<E, T> mapper) {
+        content = (List) stream().map(mapper::apply).collect(Collectors.toList());
+        return (Sheet) this;
     }
 
     public long size() {

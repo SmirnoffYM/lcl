@@ -45,8 +45,8 @@ public class EntityManagerRepository {
         return new Sheet<>(content, createCountQuery(specs, dto.getClass()).getSingleResult(), pagingAndSorting);
     }
 
-    public <ENTITY, DTO> List<ENTITY> getAll(Specs<ENTITY> specs, PagingAndSorting pagingAndSorting,
-                                             Class<DTO> dtoClass) {
+    private <ENTITY, DTO> List<ENTITY> getAll(Specs<ENTITY> specs, PagingAndSorting pagingAndSorting,
+                                              Class<DTO> dtoClass) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         Class<ENTITY> entityClass = processor.getLink(dtoClass);
 
