@@ -11,10 +11,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * SQL IN filter
+ * SQL IN filter. If specified list of values is empty, it will be ignored.
  *
  * @author Yurii Smyrnov
- * @version 1
+ * @version 2
  * @since 1/3/16 11:12 PM
  */
 public class In extends Filter<Object> {
@@ -43,6 +43,8 @@ public class In extends Filter<Object> {
     @Override
     public <R> Predicate buildPredicate(Path<Object> path, Root<R> root, CriteriaQuery<?> query, CriteriaBuilder cb,
                                         Converter converter) {
-        return path.in(values.stream().map(converter::convert).collect(Collectors.toList()));
+        return values.isEmpty()
+            ? cb.and()
+            : path.in(values.stream().map(converter::convert).collect(Collectors.toList()));
     }
 }
