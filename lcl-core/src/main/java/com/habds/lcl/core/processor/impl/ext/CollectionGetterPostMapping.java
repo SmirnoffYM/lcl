@@ -2,8 +2,8 @@ package com.habds.lcl.core.processor.impl.ext;
 
 import com.habds.lcl.core.annotation.Contains;
 import com.habds.lcl.core.processor.GetterMapping;
-import com.habds.lcl.core.processor.impl.PostMapping;
-import com.habds.lcl.core.processor.impl.PostMappingChain;
+import com.habds.lcl.core.processor.impl.GetterPostMapping;
+import com.habds.lcl.core.processor.impl.GetterPostMappingChain;
 import com.habds.lcl.core.processor.impl.util.ClassCache;
 
 import java.lang.reflect.Field;
@@ -12,18 +12,18 @@ import java.util.*;
 import java.util.stream.Stream;
 
 /**
- * {@link PostMapping} for collection fields. Handles elements customization specified by {@link Contains} annotation.
+ * {@link GetterPostMapping} for collection fields. Handles elements customization specified by {@link Contains} annotation.
  *
  * @author Yurii Smyrnov
  * @version 1
  * @since 2/2/16 10:52 PM
  */
 @SuppressWarnings("unchecked")
-public class CollectionPostMapping implements PostMapping {
+public class CollectionGetterPostMapping implements GetterPostMapping {
 
     @Override
     public boolean isApplicable(String remainingPath, Class entityPropertyClass, Class dtoPropertyClass, Field dtoField,
-                                PostMappingChain chain) {
+                                GetterPostMappingChain chain) {
         return Collection.class.isAssignableFrom(entityPropertyClass)
             && dtoField != null && Collection.class.isAssignableFrom(dtoPropertyClass);
     }
@@ -31,7 +31,7 @@ public class CollectionPostMapping implements PostMapping {
     @Override
     public GetterMapping getMapping(String remainingPath, Class entityPropertyClass,
                                     Class dtoPropertyClass, Field dtoField,
-                                    PostMappingChain chain) {
+                                    GetterPostMappingChain chain) {
         Class<?> dtoCollectionType = getDtoEmptyCollectionType(dtoField.getType());
         Contains annotation = dtoField.getAnnotation(Contains.class);
         Class<?> dtoElementType = annotation == null ? Object.class : annotation.value();

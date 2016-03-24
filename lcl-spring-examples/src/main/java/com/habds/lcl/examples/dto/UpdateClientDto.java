@@ -3,7 +3,6 @@ package com.habds.lcl.examples.dto;
 import com.habds.lcl.core.annotation.ClassLink;
 import com.habds.lcl.core.annotation.Link;
 import com.habds.lcl.examples.persistence.bo.Client;
-import com.habds.lcl.examples.persistence.bo.Gender;
 
 import java.util.Date;
 
@@ -15,7 +14,7 @@ public class UpdateClientDto {
     @Link("personalData.birthday")
     private Date birthday;
     @Link("personalData.gender")
-    private Gender gender;
+    private String gender;
 
     @Link("selectedAccount.number")
     private String selectedAccount;
@@ -23,7 +22,7 @@ public class UpdateClientDto {
     public UpdateClientDto() {
     }
 
-    public UpdateClientDto(String name, Date birthday, Gender gender, String selectedAccount) {
+    public UpdateClientDto(String name, Date birthday, String gender, String selectedAccount) {
         this.name = name;
         this.birthday = birthday;
         this.gender = gender;
@@ -46,11 +45,11 @@ public class UpdateClientDto {
         this.birthday = birthday;
     }
 
-    public Gender getGender() {
+    public String getGender() {
         return gender;
     }
 
-    public void setGender(Gender gender) {
+    public void setGender(String gender) {
         this.gender = gender;
     }
 

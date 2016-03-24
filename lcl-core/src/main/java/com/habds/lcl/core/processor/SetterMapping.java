@@ -1,8 +1,8 @@
 package com.habds.lcl.core.processor;
 
 /**
- * Property setter mapping function. Used for setting target property value from target entity into source property
- * from source entity. Walking through property chain may be customized: additional transformations or value changing
+ * Property setter mapping function. Used for setting DTO's property value into Entity.
+ * Walking through property chain may be customized: additional transformations or value changing
  * can be applied.
  *
  * @author Yurii Smyrnov
@@ -13,11 +13,11 @@ package com.habds.lcl.core.processor;
 public interface SetterMapping {
 
     /**
-     * Set up target value into source entity
+     * Set up DTO's property value into specified Entity
      *
-     * @param sourceEntity source entity
-     * @param targetValue  target value
-     * @return target value that will be set up
+     * @param entity      Entity
+     * @param dtoProperty DTO's property value
+     * @return value that was actually set up
      */
-    Object map(Object sourceEntity, Object targetValue);
+    Object map(Object entity, Object dtoProperty);
 }

@@ -454,11 +454,11 @@ public class SpringH2Test {
             new AccountState(BigDecimal.ZERO), new Date(666));
         account = accountDao.save(account);
 
-        UpdateClientDto updateRequest = new UpdateClientDto("other name", null, F, account.getNumber());
+        UpdateClientDto updateRequest = new UpdateClientDto("other name", null, F.name(), account.getNumber());
         client = updateClientDao.update(client, updateRequest);
 
         assertEquals(updateRequest.getName(), client.getPersonalData().getName());
-        assertEquals(updateRequest.getGender(), client.getPersonalData().getGender());
+        assertEquals(updateRequest.getGender(), client.getPersonalData().getGender().name());
         assertNull(client.getPersonalData().getBirthday());
         assertEquals(updateRequest.getSelectedAccount(), client.getSelectedAccount().getNumber());
         assertEquals(account.getCreationDate(), client.getSelectedAccount().getCreationDate());
@@ -487,11 +487,11 @@ public class SpringH2Test {
             new AccountState(BigDecimal.ZERO), new Date(666));
         account = repo.getEm().merge(account);
 
-        UpdateClientDto updateRequest = new UpdateClientDto("other name", null, F, account.getNumber());
+        UpdateClientDto updateRequest = new UpdateClientDto("other name", null, F.name(), account.getNumber());
         client = emProcessor.merge(client, updateRequest);
 
         assertEquals(updateRequest.getName(), client.getPersonalData().getName());
-        assertEquals(updateRequest.getGender(), client.getPersonalData().getGender());
+        assertEquals(updateRequest.getGender(), client.getPersonalData().getGender().name());
         assertNull(client.getPersonalData().getBirthday());
         assertEquals(updateRequest.getSelectedAccount(), client.getSelectedAccount().getNumber());
         assertEquals(account.getCreationDate(), client.getSelectedAccount().getCreationDate());

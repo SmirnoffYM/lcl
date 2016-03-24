@@ -52,6 +52,8 @@ public class SimpleConverter extends Converter {
             return (Enum) o;
         } else if (o instanceof Integer || o.getClass() == int.class) {
             return enumClass.getEnumConstants()[(int) o];
+        } else if (o instanceof Long || o.getClass() == long.class) {
+            return enumClass.getEnumConstants()[(int) (long) o];
         } else if (o instanceof String) {
             return Enum.valueOf(enumClass, (String) o);
         }

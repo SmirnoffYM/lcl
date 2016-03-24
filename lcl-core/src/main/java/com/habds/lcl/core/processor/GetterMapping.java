@@ -2,8 +2,8 @@ package com.habds.lcl.core.processor;
 
 /**
  * Property getter mapping function, can be chained using {@link GetterMapping#andThen(GetterMapping)} method.
- * Used for retrieval (an with possible additional transformation) of source property value from source entity, that
- * later will be set into target property of target entity.
+ * Used for retrieval (an with possible additional transformation) of Entity's property value, that
+ * later could be set into DTO's property.
  *
  * @author Yurii Smyrnov
  * @version 1
@@ -15,11 +15,11 @@ public interface GetterMapping {
     /**
      * Map source property value from source entity into target property value from target entity
      *
-     * @param sourceProperty source property value
-     * @param targetEntity   target entity
-     * @return target property value
+     * @param entityProperty entity's property value
+     * @param dto            DTO
+     * @return DTO's property value
      */
-    Object map(Object sourceProperty, Object targetEntity);
+    Object map(Object entityProperty, Object dto);
 
     default GetterMapping andThen(GetterMapping after) {
         return (s, t) -> after.map(map(s, t), t);

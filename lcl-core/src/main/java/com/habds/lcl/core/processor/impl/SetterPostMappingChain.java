@@ -1,29 +1,30 @@
 package com.habds.lcl.core.processor.impl;
 
-import com.habds.lcl.core.processor.GetterMapping;
 import com.habds.lcl.core.processor.Processor;
+import com.habds.lcl.core.processor.SetterMapping;
 
 import java.lang.reflect.Field;
 
 /**
- * Chain of {@link PostMapping}s. Allows to start postmapping recursively (for collections&amp;arrays support etc)
+ * Chain of {@link SetterPostMapping}s. Allows to start postmapping recursively.
  *
  * @author Yurii Smyrnov
  * @version 1
- * @since 2/2/16 10:33 PM
+ * @since 3/21/16 3:09 PM
+ * @see SetterPostMapping
  */
-public interface PostMappingChain {
+public interface SetterPostMappingChain {
 
     /**
      * Launch execution of the postmapping chain
      *
      * @param remainingPath    {@link com.habds.lcl.core.annotation.Link} remaining path
      * @param entityClass      Entity class
-     * @param dtoPropertyClass DTO's property class
+     * @param dtoPropertyClass DTO's property class (may be null)
      * @param dtoField         DTO's property field (may be null)
-     * @return getter mapping function
+     * @return setter mapping function
      */
-    GetterMapping getterMapping(String remainingPath, Class entityClass, Class dtoPropertyClass, Field dtoField);
+    SetterMapping setterMapping(String remainingPath, Class entityClass, Class dtoPropertyClass, Field dtoField);
 
     Processor getProcessor();
 }

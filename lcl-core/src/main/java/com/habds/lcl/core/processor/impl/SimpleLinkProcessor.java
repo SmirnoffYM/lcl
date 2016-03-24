@@ -4,10 +4,10 @@ import com.habds.lcl.core.processor.GetterMapping;
 import com.habds.lcl.core.processor.LinkProcessor;
 import com.habds.lcl.core.processor.Processor;
 import com.habds.lcl.core.processor.SetterMapping;
-import com.habds.lcl.core.processor.impl.ext.ArrayPostMapping;
-import com.habds.lcl.core.processor.impl.ext.CollectionPostMapping;
+import com.habds.lcl.core.processor.impl.ext.ArrayGetterPostMapping;
+import com.habds.lcl.core.processor.impl.ext.CollectionGetterPostMapping;
 import com.habds.lcl.core.processor.impl.ext.EnumPostMapping;
-import com.habds.lcl.core.processor.impl.ext.RecursionPostMapping;
+import com.habds.lcl.core.processor.impl.ext.RecursionGetterPostMapping;
 import com.habds.lcl.core.processor.impl.util.ClassCache;
 import com.habds.lcl.core.processor.impl.util.Property;
 
@@ -16,6 +16,7 @@ import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Bindable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
@@ -24,14 +25,16 @@ import java.util.function.Function;
  * Default {@link LinkProcessor} implementation. Uses dot as property separator.
  *
  * @author Yurii Smyrnov
- * @version 1
+ * @version 2
  * @since 12/1/2015 1:07 AM
  */
 @SuppressWarnings("unchecked")
-public class SimpleLinkProcessor implements LinkProcessor<SimpleProcessor>, PostMappingChain {
+public class SimpleLinkProcessor implements LinkProcessor<SimpleProcessor>,
+    GetterPostMappingChain, SetterPostMappingChain {
 
-    private SimpleProcessor processor;
-    private List<PostMapping> mappings;
+    protected SimpleProcessor processor;
+    protected List<GetterPostMapping> getterMappings = new ArrayList<>();
+    protected List<SetterPostMapping> setterMappings = new ArrayList<>();
 
     public SimpleLinkProcessor() {
     }
@@ -44,8 +47,9 @@ public class SimpleLinkProcessor implements LinkProcessor<SimpleProcessor>, Post
     @Override
     public void configure(SimpleProcessor processor) {
         this.processor = processor;
-        this.mappings = Arrays.asList(
-            new ArrayPostMapping(), new CollectionPostMapping(), new EnumPostMapping(), new RecursionPostMapping());
+        this.getterMappings.addAll(Arrays.asList(new ArrayGetterPostMapping(), new CollectionGetterPostMapping(),
+            new EnumPostMapping(), new RecursionGetterPostMapping()));
+        this.setterMappings.add(new EnumPostMapping());
     }
 
     @Override
@@ -99,7 +103,7 @@ public class SimpleLinkProcessor implements LinkProcessor<SimpleProcessor>, Post
 
     private GetterMapping applyPostMapping(GetterMapping getterMapping, String remainingPath, Class entityPropertyClass,
                                            Class dtoPropertyClass, Field dtoField) {
-        for (PostMapping mapping : mappings) {
+        for (GetterPostMapping mapping : getterMappings) {
             if (mapping.isApplicable(remainingPath, entityPropertyClass, dtoPropertyClass, dtoField, this)) {
                 return getterMapping.andThen(
                     mapping.getMapping(remainingPath, entityPropertyClass, dtoPropertyClass, dtoField, this));
@@ -114,52 +118,51 @@ public class SimpleLinkProcessor implements LinkProcessor<SimpleProcessor>, Post
     }
 
     @Override
-    public SetterMapping setterMapping(String path, Class entityClass, Field dtoField) {
+    public SetterMapping setterMapping(String path, Class entityClass, Class dtoPropertyClass, Field dtoField) {
         String propertyName = path.split("\\.", 2)[0];
+
+        // If there are only getter method, just return non-setting mapping (prevent from exception)
         if (!ClassCache.getInstance().hasProperty(entityClass, propertyName) &&
             ClassCache.getInstance().hasGetterMethod(entityClass, propertyName)) {
             return (s, v) -> v;
         }
         Property property = ClassCache.getInstance().getProperty(entityClass, propertyName);
 
-        //TODO: mapping
+        // Return postmapping for current property chain, if it exists
+        for (SetterPostMapping postMapping : setterMappings) {
+            if (postMapping.isApplicable(path, property, dtoPropertyClass, dtoField, this)) {
+                return postMapping.getMapping(path, property, dtoPropertyClass, dtoField, this);
+            }
+        }
+
         if (path.contains(".")) {
+            // Middle of the path:
+            // 1) Instantiate (call default constructor) for this intermediate value - only if it is null
+            // 2) Call this function recursively for the remaining property path
+
             String remainingPath = path.substring(path.indexOf(".") + 1);
-            return (s, v) -> passSetterChain(s, property, property.getter().apply(s), remainingPath, dtoField, v);
+            return (entity, dtoProperty) -> {
+                Object current = property.getter().apply(entity);
+                if (current == null) {
+                    current = ClassCache.construct(property.getType());
+                    property.setter().apply(entity, current);
+                }
+                return setterMapping(remainingPath, property.getType(), dtoField).map(current, dtoProperty);
+            };
         } else {
+            // End of the path: set value and return
             return (s, v) -> property.setter().apply(s, v);
         }
     }
 
     @Override
-    public Processor getProcessor() {
-        return processor;
+    public SetterMapping setterMapping(String path, Class entityClass, Field dtoField) {
+        return setterMapping(path, entityClass, dtoField == null ? null : dtoField.getType(), dtoField);
     }
 
-    /**
-     * Method determines what should be done with intermediate property
-     * (located not in the end of property dot-path)
-     * during setting DTO's property value to Entity's property.
-     * This implementation only replaces {@code null} with new class instance (to avoid NPE during setting). If
-     * property already has a value, it just leaves it and goes further.
-     *
-     * @param intermediateEntity        intermediate entity
-     * @param intermediateProperty      intermediate entity's {@link Property}
-     * @param intermediatePropertyValue current value of intermediate property
-     * @param remainingPath             remaining dot-path
-     * @param dtoField                  DTO's field
-     * @param dtoPropertyValue          DTO field's value (to be set into Entity's property)
-     * @return value was really set
-     */
-    protected Object passSetterChain(Object intermediateEntity, Property intermediateProperty,
-                                     Object intermediatePropertyValue,
-                                     String remainingPath, Field dtoField, Object dtoPropertyValue) {
-        if (intermediatePropertyValue == null) {
-            intermediatePropertyValue = ClassCache.construct(intermediateProperty.getField().getType());
-            intermediateProperty.setter().apply(intermediateEntity, intermediatePropertyValue);
-        }
-        return setterMapping(remainingPath, intermediateProperty.getType(), dtoField)
-            .map(intermediatePropertyValue, dtoPropertyValue);
+    @Override
+    public Processor getProcessor() {
+        return processor;
     }
 
     @Override

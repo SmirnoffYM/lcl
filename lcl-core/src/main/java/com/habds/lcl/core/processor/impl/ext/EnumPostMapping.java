@@ -1,35 +1,39 @@
 package com.habds.lcl.core.processor.impl.ext;
 
 import com.habds.lcl.core.processor.GetterMapping;
-import com.habds.lcl.core.processor.impl.PostMapping;
-import com.habds.lcl.core.processor.impl.PostMappingChain;
+import com.habds.lcl.core.processor.SetterMapping;
+import com.habds.lcl.core.processor.impl.*;
+import com.habds.lcl.core.processor.impl.util.Property;
 
 import java.lang.reflect.Field;
 
 /**
- * {@link PostMapping} for conversion between entity and dto enum values.
- * Applicable if either entity property OR dto property are enums.
- * <ul>
- * <li>If both are same enums, mapping function will return incoming value</li>
- * <li>If both are different enums, try to make transformation calling
- * {@link Enum#valueOf(Class, String)} with name of the incoming enum as second argument</li>
- * <li>If dto prop is enum, return entity enum's name</li>
- * <li>If entity prop is string, return {@link Enum#valueOf(Class, String)}</li>
- * <li>If entity prop is enum, return its ordinal</li>
- * <li>Else return element from {@link Class#getEnumConstants()}</li>
- * </ul>
+ * Class allows enum conversions to string, integer or other enums during building
+ * {@link SetterMapping} and {@link GetterMapping}
  *
  * @author Yurii Smyrnov
- * @version 1
+ * @version 2
  * @since 2/2/16 10:27 PM
  */
 @SuppressWarnings("unchecked")
-public class EnumPostMapping implements PostMapping {
+public class EnumPostMapping implements GetterPostMapping, SetterPostMapping {
 
     @Override
     public boolean isApplicable(String remainingPath, Class entityPropertyClass, Class dtoPropertyClass, Field dtoField,
-                                PostMappingChain chain) {
+                                GetterPostMappingChain chain) {
         return convertible(entityPropertyClass, dtoPropertyClass) || convertible(dtoPropertyClass, entityPropertyClass);
+    }
+
+    @Override
+    public boolean isApplicable(String remainingPath, Property entityProperty, Class dtoPropertyClass, Field dtoField,
+                                SetterPostMappingChain chain) {
+        Class entityPropertyClass = entityProperty.getType();
+        return entityPropertyClass.isEnum()
+            && (dtoPropertyClass == null || dtoPropertyClass.isEnum()
+            || dtoPropertyClass == String.class || Number.class.isAssignableFrom(dtoPropertyClass))
+            || dtoPropertyClass != null && dtoPropertyClass.isEnum()
+            && (entityPropertyClass == String.class
+            || Number.class.isAssignableFrom(entityPropertyClass) || entityPropertyClass.isEnum());
     }
 
     private boolean convertible(Class from, Class to) {
@@ -38,25 +42,23 @@ public class EnumPostMapping implements PostMapping {
 
     @Override
     public GetterMapping getMapping(String remainingPath, Class entityPropertyClass, Class dtoPropertyClass,
-                                    Field dtoField, PostMappingChain chain) {
-        if (dtoPropertyClass.equals(entityPropertyClass)) {
-            return (property, dto) -> property;
-        } else if (dtoPropertyClass.isEnum() && entityPropertyClass.isEnum()) {
-            return (property, dto) -> property == null
-                ? null : Enum.valueOf((Class<Enum>) dtoPropertyClass, ((Enum) property).name());
+                                    Field dtoField, GetterPostMappingChain chain) {
+        if (dtoPropertyClass.isEnum()) {
+            return (entityProperty, dto) -> SimpleConverter.toEnum(dtoPropertyClass, entityProperty);
         }
 
         if (entityPropertyClass.isEnum() && dtoPropertyClass == String.class) {
             return (property, dto) -> property == null ? null : ((Enum) property).name();
-        } else if (entityPropertyClass == String.class && dtoPropertyClass.isEnum()) {
-            return (property, dto) -> property == null ? null :
-                Enum.valueOf((Class<Enum>) dtoPropertyClass, (String) property);
-        } else if (entityPropertyClass.isEnum()) {
-            return (property, dto) -> property == null ? null :
-                ((Integer) ((Enum) property).ordinal());
         } else {
-            return (property, dto) -> property == null ? null :
-                (dtoPropertyClass.getEnumConstants()[((Number) property).intValue()]);
+            return (property, dto) -> property == null ? null : ((Integer) ((Enum) property).ordinal());
         }
+    }
+
+    @Override
+    public SetterMapping getMapping(String remainingPath, Property entityProperty, Class dtoPropertyClass,
+                                    Field dtoField, SetterPostMappingChain chain) {
+        Class entityPropertyClass = entityProperty.getType();
+        return (entity, dtoProperty) -> entityProperty.setter()
+            .apply(entity, SimpleConverter.toEnum(entityPropertyClass, dtoProperty));
     }
 }
