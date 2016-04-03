@@ -177,9 +177,12 @@ public class SimpleLinkProcessor implements LinkProcessor<SimpleProcessor>,
     }
 
     @Override
-    public Path getJpaPath(Class dtoClass, String propertyName, Root root, CriteriaQuery query, CriteriaBuilder cb) {
+    public Path getJpaPath(Class dtoClass, String propertyName, Path path, CriteriaQuery query, CriteriaBuilder cb) {
         String entityPath = getPath(dtoClass, propertyName);
-        return getJpaPath(root, entityPath);
+        if (path instanceof Root) {
+            return getJpaPath((Root) path, entityPath);
+        }
+        return getJpaPath(path, entityPath);
     }
 
     private static Path getJpaPath(From from, String property) {

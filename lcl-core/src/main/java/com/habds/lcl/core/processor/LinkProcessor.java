@@ -3,7 +3,6 @@ package com.habds.lcl.core.processor;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Root;
 import java.lang.reflect.Field;
 
 /**
@@ -61,7 +60,7 @@ public interface LinkProcessor<P extends Processor> {
      *
      * @param dtoClass     class of DTO
      * @param propertyName name of DTO's property
-     * @param root         JPA Root
+     * @param beginning    starting point for JPA Path building, specify Root for the very beginning
      * @param query        JPA Criteria Query
      * @param cb           JPA Criteria Builder
      * @param <EP>         type of Entity's property
@@ -69,5 +68,5 @@ public interface LinkProcessor<P extends Processor> {
      * @return JPA Path object
      */
     <EP, DTO> Path<EP> getJpaPath(Class<DTO> dtoClass, String propertyName,
-                                  Root root, CriteriaQuery query, CriteriaBuilder cb);
+                                  Path beginning, CriteriaQuery query, CriteriaBuilder cb);
 }

@@ -148,26 +148,40 @@ public class SimpleProcessor implements Processor {
         return (root, query, cb) ->
             cb.and(
                 filters.entrySet().stream()
-                    .map(e -> createPredicate(dtoClass, e.getKey(), e.getValue(), root, query, cb))
+                    .map(e -> createPredicate(dtoClass, e.getKey(), e.getValue(), root, root, query, cb))
                     .toArray(Predicate[]::new)
             );
     }
 
     @Override
     public <ENTITY, DTO> Specs<ENTITY> createSpecs(DTO dto) {
-        Map<String, Filter> filters = new HashMap<>();
-        ClassCache.getInstance().getAllProperties(dto.getClass()).forEach((name, property) -> {
-            Filter filter = toFilter(dto, property);
-            if (filter != null) {
-                filters.put(name, filter);
-            }
-        });
-        Specs<ENTITY> specs = createSpecs(filters, dto.getClass());
+        return createSpecs(dto, null);
+    }
+
+    public <ENTITY, DTO> Specs<ENTITY> createSpecs(DTO dto, Path path) {
+        Specs<ENTITY> specs = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            ClassCache.getInstance().getAllProperties(dto.getClass()).forEach((name, property) -> {
+                Filter filter = toFilter(dto, property);
+
+                Path current = path == null ? root : path;
+                if (filter != null && filter instanceof Equals && isProcessable(property.getType())) {
+                    Path next = linkProcessor.getJpaPath(dto.getClass(), name, current, query, cb);
+                    Specs<ENTITY> nestedSpecs = createSpecs(property.getter().apply(dto), next);
+                    predicates.add(nestedSpecs.buildPredicate(root, query, cb));
+                } else if (filter != null) {
+                    predicates.add(createPredicate(dto.getClass(), name, filter, current, root, query, cb));
+                }
+            });
+            return cb.and(predicates.toArray(new Predicate[predicates.size()]));
+        };
+
         if (dto instanceof Specs) {
             return ((Specs) dto).and(specs);
         }
         return specs;
     }
+
 
     @SuppressWarnings("ConstantConditions")
     protected <DTO> Filter toFilter(DTO dto, Property<DTO, Object> property) {
@@ -204,8 +218,9 @@ public class SimpleProcessor implements Processor {
     }
 
     protected <ENTITY, DTO> Predicate createPredicate(Class<DTO> targetClass, String path, Filter filter,
+                                                      Path currentPath,
                                                       Root root, CriteriaQuery query, CriteriaBuilder cb) {
-        Path<ENTITY> jpaPath = getJpaPath(targetClass, path, root, query, cb);
+        Path<ENTITY> jpaPath = linkProcessor.getJpaPath(targetClass, path, currentPath, query, cb);
         return filter.getPredicate(jpaPath, root, query, cb, createConverter(jpaPath));
     }
 

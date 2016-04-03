@@ -167,6 +167,18 @@ public class SpringH2Test {
         filter.setGender(F);
         assertEquals(4, dao.count(filter));
 
+        filter = new ClientSpecificationDto();
+        AccountDto selectedAccount = new AccountDto();
+        selectedAccount.setAmount(BigDecimal.valueOf(10_000));
+        filter.setSelectedAccount(selectedAccount);
+        assertEquals(1, dao.count(filter));
+
+        filter = new ClientSpecificationDto();
+        selectedAccount = new AccountDto();
+        selectedAccount.setCurrency("UAH");
+        filter.setSelectedAccount(selectedAccount);
+        assertEquals(2, dao.count(filter));
+
         JpaDao<Client, ClientExtendableSpecificationDto> dao2 = springProcessor.dao(ClientExtendableSpecificationDto.class);
 
         ClientExtendableSpecificationDto filter2 = new ClientExtendableSpecificationDto();
@@ -224,6 +236,18 @@ public class SpringH2Test {
         filter = new ClientSpecificationDto();
         filter.setGender(F);
         assertEquals(4, repo.count(filter));
+
+        filter = new ClientSpecificationDto();
+        AccountDto selectedAccount = new AccountDto();
+        selectedAccount.setAmount(BigDecimal.valueOf(10_000));
+        filter.setSelectedAccount(selectedAccount);
+        assertEquals(1, repo.count(filter));
+
+        filter = new ClientSpecificationDto();
+        selectedAccount = new AccountDto();
+        selectedAccount.setCurrency("UAH");
+        filter.setSelectedAccount(selectedAccount);
+        assertEquals(2, repo.count(filter));
 
         ClientExtendableSpecificationDto filter2 = new ClientExtendableSpecificationDto();
         filter2.setNames(Arrays.asList("Yurii", "Abc"));

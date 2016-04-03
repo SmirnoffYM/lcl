@@ -39,6 +39,8 @@ public class ClientSpecificationDto {
     @Link("selectedAccount")
     private Boolean selectedAccountAbsent;
 
+    private AccountDto selectedAccount;
+
     public String getEmail() {
         return email;
     }
@@ -93,5 +95,13 @@ public class ClientSpecificationDto {
 
     public void setSelectedAccountAbsent(Boolean selectedAccountAbsent) {
         this.selectedAccountAbsent = selectedAccountAbsent;
+    }
+
+    public AccountDto getSelectedAccount() {
+        return selectedAccount;
+    }
+
+    public void setSelectedAccount(AccountDto selectedAccount) {
+        this.selectedAccount = selectedAccount;
     }
 }
