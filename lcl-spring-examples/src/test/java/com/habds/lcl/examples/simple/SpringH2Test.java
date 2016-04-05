@@ -435,8 +435,12 @@ public class SpringH2Test {
         assertEquals(1, clients.size());
         assertEquals("lead@lead.com", clients.getContent().get(0).getLogin());
 
-        clients = repo.getAll(new HashMap<>(), new PagingAndSorting().orderBy("selectedAccount.amount", false),
-            ClientDto.class);
+        Map<String, Boolean> sortings = new HashMap<>();
+        sortings.put("selectedAccount.amount", false);
+        sortings.put("gender", null);
+        PagingAndSorting pageable = new PagingAndSorting();
+        pageable.setSortings(sortings);
+        clients = repo.getAll(new HashMap<>(), pageable, ClientDto.class);
         assertEquals(8, clients.size());
         assertEquals("test Abc", clients.getContent().get(0).getName());
         assertEquals("Yurii", clients.getContent().get(1).getName());

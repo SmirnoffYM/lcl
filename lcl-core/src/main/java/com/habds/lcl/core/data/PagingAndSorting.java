@@ -22,7 +22,7 @@ public class PagingAndSorting {
     public PagingAndSorting(Integer page, Integer pageSize, Map<String, Boolean> sortings) {
         this.page = page;
         this.pageSize = pageSize;
-        this.sortings = sortings;
+        setSortings(sortings);
     }
 
     public PagingAndSorting(Integer page, Integer pageSize) {
@@ -74,5 +74,6 @@ public class PagingAndSorting {
 
     public void setSortings(Map<String, Boolean> sortings) {
         this.sortings = sortings;
+        sortings.values().removeIf(v -> v == null);
     }
 }
