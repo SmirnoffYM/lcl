@@ -6,15 +6,14 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Mark DTO's field with this annotation to add "isNull" filter
- * during call of {@link com.habds.lcl.core.processor.Processor#createSpecs(Object)}.
- * Applicable only to boolean or Boolean fields.
+ * Mark DTO's field with this annotation to negate any filtering
  *
  * @author Yurii Smyrnov
  * @version 1
- * @since 2/16/16 4:38 PM
+ * @see Filter#negate()
+ * @since 8/21/16 2:57 PM
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-public @interface IsNull {
+public @interface Not {
 }

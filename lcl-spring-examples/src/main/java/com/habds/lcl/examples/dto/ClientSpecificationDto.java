@@ -39,6 +39,15 @@ public class ClientSpecificationDto {
     @Link("selectedAccount")
     private Boolean selectedAccountAbsent;
 
+    @Not
+    @IsNull
+    @Link("manager")
+    private Boolean managerPresent;
+
+    @IsNotNull
+    @Link("lead")
+    private Boolean leadPresent;
+
     private AccountDto selectedAccount;
 
     public String getEmail() {
@@ -103,5 +112,21 @@ public class ClientSpecificationDto {
 
     public void setSelectedAccount(AccountDto selectedAccount) {
         this.selectedAccount = selectedAccount;
+    }
+
+    public Boolean getManagerPresent() {
+        return managerPresent;
+    }
+
+    public void setManagerPresent(Boolean managerPresent) {
+        this.managerPresent = managerPresent;
+    }
+
+    public Boolean getLeadPresent() {
+        return leadPresent;
+    }
+
+    public void setLeadPresent(Boolean leadPresent) {
+        this.leadPresent = leadPresent;
     }
 }

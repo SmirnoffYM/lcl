@@ -192,29 +192,33 @@ public class SimpleProcessor implements Processor {
         if (value == null) {
             return null;
         }
+        Filter filter;
         if (property.hasFieldAnnotation(From.class)) {
             From from = property.getFieldAnnotation(From.class);
-            return from.exclusive() ? new Range<>().fromExclusive(value) : new Range<>(value, null);
-        }
-        if (property.hasFieldAnnotation(To.class)) {
+            filter = from.exclusive() ? new Range<>().fromExclusive(value) : new Range<>(value, null);
+        } else if (property.hasFieldAnnotation(To.class)) {
             To to = property.getFieldAnnotation(To.class);
-            return to.exclusive() ? new Range<>().toExclusive(value) : new Range<>(null, value);
-        }
-        if (value instanceof String && property.hasFieldAnnotation(Like.class)) {
-            return new com.habds.lcl.core.data.filter.impl.Like(
+            filter = to.exclusive() ? new Range<>().toExclusive(value) : new Range<>(null, value);
+        } else if (value instanceof String && property.hasFieldAnnotation(Like.class)) {
+            filter = new com.habds.lcl.core.data.filter.impl.Like(
                 (String) value, property.getFieldAnnotation(Like.class).useLowerCase());
-        }
-        if (property.hasFieldAnnotation(In.class) && value instanceof Collection) {
-            return new com.habds.lcl.core.data.filter.impl.In((Collection<Object>) value);
-        }
-        if (property.hasFieldAnnotation(In.class) && value.getClass().isArray()) {
-            return new com.habds.lcl.core.data.filter.impl.In((Object[]) value);
-        }
-        if (property.hasFieldAnnotation(IsNull.class)
+        } else if (property.hasFieldAnnotation(In.class) && value instanceof Collection) {
+            filter = new com.habds.lcl.core.data.filter.impl.In((Collection<Object>) value);
+        } else if (property.hasFieldAnnotation(In.class) && value.getClass().isArray()) {
+            filter = new com.habds.lcl.core.data.filter.impl.In((Object[]) value);
+        } else if (property.hasFieldAnnotation(IsNull.class)
             && (value.getClass() == boolean.class || value.getClass() == Boolean.class)) {
-            return new Null((boolean) value);
+            filter = new Null((boolean) value);
+        } else if (property.hasFieldAnnotation(IsNotNull.class)
+            && (value.getClass() == boolean.class || value.getClass() == Boolean.class)) {
+            filter = new Null((boolean) value).negate();
+        } else {
+            filter = new Equals(value);
         }
-        return new Equals(value);
+        if (property.hasFieldAnnotation(Not.class)) {
+            filter.negate();
+        }
+        return filter;
     }
 
     protected <ENTITY, DTO> Predicate createPredicate(Class<DTO> targetClass, String path, Filter filter,

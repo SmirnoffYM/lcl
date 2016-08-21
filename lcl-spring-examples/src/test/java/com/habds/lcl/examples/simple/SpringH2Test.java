@@ -179,6 +179,22 @@ public class SpringH2Test {
         filter.setSelectedAccount(selectedAccount);
         assertEquals(2, dao.count(filter));
 
+        filter = new ClientSpecificationDto();
+        filter.setManagerPresent(true);
+        assertEquals(0, dao.count(filter));
+
+        filter = new ClientSpecificationDto();
+        filter.setManagerPresent(false);
+        assertEquals(8, dao.count(filter));
+
+        filter = new ClientSpecificationDto();
+        filter.setLeadPresent(true);
+        assertEquals(1, dao.count(filter));
+
+        filter = new ClientSpecificationDto();
+        filter.setLeadPresent(false);
+        assertEquals(7, dao.count(filter));
+
         JpaDao<Client, ClientExtendableSpecificationDto> dao2 = springProcessor.dao(ClientExtendableSpecificationDto.class);
 
         ClientExtendableSpecificationDto filter2 = new ClientExtendableSpecificationDto();
@@ -248,6 +264,23 @@ public class SpringH2Test {
         selectedAccount.setCurrency("UAH");
         filter.setSelectedAccount(selectedAccount);
         assertEquals(2, repo.count(filter));
+
+        filter = new ClientSpecificationDto();
+        filter.setManagerPresent(true);
+        assertEquals(0, repo.count(filter));
+
+        filter = new ClientSpecificationDto();
+        filter.setManagerPresent(false);
+        assertEquals(8, repo.count(filter));
+
+        filter = new ClientSpecificationDto();
+        filter.setLeadPresent(true);
+        assertEquals(1, repo.count(filter));
+
+        filter = new ClientSpecificationDto();
+        filter.setLeadPresent(false);
+        assertEquals(7, repo.count(filter));
+
 
         ClientExtendableSpecificationDto filter2 = new ClientExtendableSpecificationDto();
         filter2.setNames(Arrays.asList("Yurii", "Abc"));
