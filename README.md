@@ -338,10 +338,10 @@ Now complete your ``ClientSpecificationDto`` (class containing the filtering par
     }
 ```
 
-Currently, 5 filter types are supported: ``equals`` 
+Currently, 6 filter types are supported: ``equals`` 
 (the default one, will be used if filtering annotation isn't specified explicitly), ``@In``, ``@Like``, 
-``@IsNull`` (checks either ``is null`` or ``is not null`` - depending on on boolean property value) and 
-``@From``/``@To`` pair. 
+``@IsNull``, ``@IsNotNull`` (checks ``is null`` or ``is not null`` accordingly) and 
+``@From``/``@To`` pair. Filtering predicate can be negated by marking the field with ``@Not`` annotation.
 Note: if property has ``null`` value, filtering is not applied.
 
 See, 7 fields and no ``toPredicate()`` function! But for complex cases that could not be covered by these annotations
