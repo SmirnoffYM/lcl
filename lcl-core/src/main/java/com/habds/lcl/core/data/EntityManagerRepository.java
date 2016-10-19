@@ -138,15 +138,15 @@ public class EntityManagerRepository {
         return new Sheet<>(content, createCountQuery(specs, dto.getClass(), true).getSingleResult(), pagingAndSorting);
     }
 
-    private <ENTITY, DTO> List<ENTITY> getAll(Specs<ENTITY> specs, PagingAndSorting pagingAndSorting,
-                                              Class<DTO> dtoClass, boolean distinct) {
+    protected <ENTITY, DTO> List<ENTITY> getAll(Specs<ENTITY> specs, PagingAndSorting pagingAndSorting,
+                                                Class<DTO> dtoClass, boolean distinct) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         Class<ENTITY> entityClass = processor.getLink(dtoClass);
 
         CriteriaQuery<ENTITY> criteriaQuery = cb.createQuery(entityClass);
         Root<ENTITY> root = criteriaQuery.from(entityClass);
         criteriaQuery.where(specs.buildPredicate(root, criteriaQuery, cb));
-        criteriaQuery.distinct(distinct);
+        setDistinct(criteriaQuery, distinct);
 
         List<Order> orders = pagingAndSorting.getSortings().entrySet().stream()
             .map(e -> {
@@ -163,6 +163,10 @@ public class EntityManagerRepository {
             query.setMaxResults(pagingAndSorting.getPageSize());
         }
         return query.getResultList();
+    }
+
+    protected <ENTITY> void setDistinct(CriteriaQuery<ENTITY> query, boolean distinct) {
+        query.distinct(distinct);
     }
 
     /**
@@ -256,7 +260,7 @@ public class EntityManagerRepository {
         return count(dto) > 0;
     }
 
-    private <ENTITY, DTO> TypedQuery<ENTITY> createQuery(Specs<ENTITY> specs, Class<DTO> dtoClass, boolean distinct) {
+    protected <ENTITY, DTO> TypedQuery<ENTITY> createQuery(Specs<ENTITY> specs, Class<DTO> dtoClass, boolean distinct) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         Class<ENTITY> entityClass = processor.getLink(dtoClass);
 
@@ -267,8 +271,8 @@ public class EntityManagerRepository {
         return em.createQuery(query);
     }
 
-    private <ENTITY, DTO> TypedQuery<Long> createCountQuery(Specs<ENTITY> specs, Class<DTO> dtoClass,
-                                                            boolean distinct) {
+    protected <ENTITY, DTO> TypedQuery<Long> createCountQuery(Specs<ENTITY> specs, Class<DTO> dtoClass,
+                                                              boolean distinct) {
         Class<ENTITY> entityClass = processor.getLink(dtoClass);
 
         CriteriaBuilder cb = em.getCriteriaBuilder();

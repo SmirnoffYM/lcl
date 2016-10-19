@@ -144,7 +144,7 @@ First of all, add ``lcl-core`` into your project. Here's Maven dependency:
     <dependency>
         <groupId>com.habds</groupId>
         <artifactId>lcl-core</artifactId>
-        <version>0.9.9.RELEASE</version>
+        <version>1.0.0.RELEASE</version>
     </dependency>
 ```
 
@@ -202,7 +202,7 @@ For Spring MVC ``lcl-core`` won't be enough, you will need to add ``lcl-spring``
     <dependency>
         <groupId>com.habds</groupId>
         <artifactId>lcl-spring</artifactId>
-        <version>0.9.9.RELEASE</version>
+        <version>1.0.0.RELEASE</version>
     </dependency>
 ```
 
