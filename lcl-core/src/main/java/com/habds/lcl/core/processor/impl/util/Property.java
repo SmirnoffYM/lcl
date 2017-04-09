@@ -67,4 +67,9 @@ public class Property<T, P> {
     public Field getField() {
         return field;
     }
+
+    @Override
+    public String toString() {
+        return "Property(name=" + name + ",field=" + field + ")";
+    }
 }

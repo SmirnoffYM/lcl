@@ -26,6 +26,7 @@ public abstract class JpaRelationSetterPostMapping implements SetterPostMapping 
                                 Class dtoPropertyClass, Field dtoField, SetterPostMappingChain chain) {
         String[] chains = remainingPath.split("\\.");
         return chains.length >= 2 && entityProperty.getType().getAnnotation(Entity.class) != null
+            && ClassCache.getInstance().hasProperty(entityProperty.getField().getType(), chains[1])
             && ClassCache.getInstance().getProperty(entityProperty.getField().getType(), chains[1])
             .hasFieldAnnotation(Id.class);
     }
