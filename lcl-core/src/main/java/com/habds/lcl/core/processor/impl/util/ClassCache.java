@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -119,7 +120,7 @@ public class ClassCache {
 
         Map<String, Method> methods = Arrays.asList(clazz.getMethods()).stream()
             .filter(this::isGetter)
-            .collect(Collectors.toMap(this::getPropertyNameFromGetter, Function.identity()));
+            .collect(Collectors.toMap(this::getPropertyNameFromGetter, Function.identity(), new MethodMerger()));
         classGetters.put(clazz, methods);
     }
 
@@ -135,5 +136,13 @@ public class ClassCache {
     private String getPropertyNameFromGetter(Method getter) {
         String name = getter.getName().replaceFirst("get|is", "");
         return name.substring(0, 1).toLowerCase() + name.substring(1);
+    }
+
+    public static class MethodMerger implements BinaryOperator<Method> {
+
+        @Override
+        public Method apply(Method m1, Method m2) {
+            return m1.getClass().isAssignableFrom(m2.getClass()) ? m2 : m1;
+        }
     }
 }
